@@ -16,41 +16,55 @@ function App() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
   const { register, handleSubmit, reset } = useForm();
+  const [who, setWho] = useState('');
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = async (data) => {
 
     const newFormData = { ...formData, ...data };
     setFormData(newFormData);
-    //data.preventDefault();
+    data.preventDefault();
+    const newErrors = {};
 
-      
-    // submitting form
-    if (currentStep === 9) {
-      //setIsSubmitting(true);
-      // triyng to submit form
-      try {
-        // trying to send info to firebase
-        try {
-            const result = await addMessage({newFormData});
-            console.log('Response from Cloud Function:', result.data);
-            console.log(newFormData);        
-          } catch (error) {
-            console.error('Error sending data to Cloud Function:', error);
-          }
-        // send info to Firebase
-        alert('Form submitted successfully');
-        reset();
-        setCurrentStep(1);
-        setFormData({});
-      } catch (error) {
-        console.error('Error submitting form:', error);
-      }
-      // submit form
-    } else {
-      setCurrentStep(currentStep + 1);
+    if (!who.trim()) {
+      newErrors.name = 'Name is required';
     }
 
-    //setIsSubmitting(false);
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      setIsSubmitting(true);
+      // submitting form
+      if (currentStep === 9) {
+        // triyng to submit form
+        try {
+          // trying to send info to firebase
+          try {
+              const result = await addMessage({newFormData});
+              console.log('Response from Cloud Function:', result.data);
+              console.log(newFormData);        
+            } catch (error) {
+              console.error('Error sending data to Cloud Function:', error);
+            }
+          // send info to Firebase
+          alert('Form submitted successfully');
+          reset();
+          setCurrentStep(1);
+          setFormData({});
+        } catch (error) {
+          console.error('Error submitting form:', error);
+        }
+        // submit form
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
+    } else {
+      alert('Enter required fields');
+    }
+
+    setIsSubmitting(false);
+    setErrors({});
   };
 
   const handleBack = () => {
