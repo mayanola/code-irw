@@ -11,18 +11,15 @@ const addMessage = httpsCallable(functions, 'addMessage');
 const stepVariants = {
   initial: {
     opacity: 0,
-    //x: -100,
   },
   enter: {
     opacity: 1,
-   // x: 0,
     transition: {
       duration: 0.5,
     },
   },
   exit: {
     opacity: 0,
-   // x: 100,
     transition: {
       duration: 0.5,
     },
@@ -74,45 +71,6 @@ function IntroForm() {
   const handleBack = () => {
     setCurrentStep(currentStep - 1);
   };
-
-  // // updates the inputValue state whenever the input value changes
-  // const handleInputChange = (event) => {
-  //   setInputValue(event.target.value);
-  // };
-
-  // // logs the current state of input value
-  // const handleSubmit = async (event) => {
-  //   try {
-  //     event.preventDefault(); // Prevent the default form submission behavior of a reload (we don't want to reload the page just update logs/database)
-  //     console.log("value before: ", inputValue);
-  
-  //     const result = await addMessage({ text: inputValue });
-  
-  //     console.log('Response from Cloud Function:', result.data);
-  //     //setInputValue(''); // Clear input field
-
-  //     const displayText = result.data.uppercase;
-  //     setInputValue(displayText);
-
-
-  //   } catch (error) {
-  //     console.error('Error sending data to Cloud Function:', error);
-  //   }
-
-  // };
-
-  // db.collection('messages').doc(messageId).onSnapshot((doc) => {
-  //   if (doc.exists) {
-  //     const data = doc.data();
-  //     console.log('Document data:', data);
-  //     // Handle the updated data
-  //   } else {
-  //     console.log('No such document!');
-  //   }
-  // }, (error) => {
-  //   console.error('Error fetching document:', error);
-  // });
-
   
   return (
     <div className="App" class="container">
