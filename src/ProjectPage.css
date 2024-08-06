@@ -1,0 +1,25 @@
+/* Container to hold the side pane */
+.container {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Styles for the side pane */
+.side-pane {
+    position: fixed;
+    left: -250px; /* Hide the pane off-screen */
+    top: 0;
+    bottom: 0;
+    width: 250px;
+    background-color: #f4f4f4;
+    border-right: 1px solid #ddd;
+    padding: 20px;
+    transition: left 0.3s ease;
+}
+
+/* Hover effect to show the side pane */
+.side-pane:hover {
+    left: 0; /* Slide the pane into view */
+}
