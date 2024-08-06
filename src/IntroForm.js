@@ -9,7 +9,7 @@ import { Container, Box, Typography, TextField, Button } from '@mui/material';
 // Call your Cloud Function
 const addMessage = httpsCallable(functions, 'addMessage');
 
-function App() {
+function IntroForm() {
   // useState is a hook (like a digital sticky note) which creates two state variables that we can update
   // we use this instead of a typical 'let' variable bc when useState updates the state it informs React to re-render which updates the UI (normal variable don't)
   // const [inputValue, setInputValue] = useState('');
@@ -193,4 +193,4 @@ function App() {
   );
 }
 
-export default App;
+export default IntroForm;
