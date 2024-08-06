@@ -102,7 +102,7 @@ function IntroForm() {
                 exit="exit"
                 className="step"
                 style={{ position: 'absolute'}}>
-                  <p>What do you want to do?</p>
+                  <p>What do you want to build?</p>
                   <input placeholder="I want to..." {...register('what', { required: true })} />
                   <br></br>
                   <button type="button" onClick={handleBack}>Back</button>
@@ -118,7 +118,7 @@ function IntroForm() {
               exit="exit"
               className="step"
               style={{ position: 'absolute'}}>
-                <p>How do you learn best?</p>
+                <p>Do you learn better via text or video?</p>
                 <input placeholder="I learn by..." {...register('how_learn', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
@@ -134,7 +134,7 @@ function IntroForm() {
               exit="exit"
               className="step"
               style={{ position: 'absolute'}}>
-                <p>What is your timeline?</p>
+                <p>How many weeks do you want to build your project in?</p>
                 <input {...register('timeline', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
