@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import './App.css'; // Import the CSS file
 import { Container, Box, Typography, TextField, Button } from '@mui/material';
 
-
 // Call your Cloud Function
 const addMessage = httpsCallable(functions, 'addMessage');
 

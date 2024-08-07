@@ -2,12 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 import { useForm } from 'react-hook-form';
-import './App.css'; // Import the CSS file
-import { Container, Box, Typography, TextField, Button } from '@mui/material';
-
+import './App.scss'; // Import the CSS file
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Call your Cloud Function
 const addMessage = httpsCallable(functions, 'addMessage');
+
+const stepVariants = {
+  initial: {
+    opacity: 0,
+  },
+  enter: {
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
 
 function IntroForm() {
   // useState is a hook (like a digital sticky note) which creates two state variables that we can update
@@ -49,145 +66,172 @@ function IntroForm() {
     } else {
       setCurrentStep(currentStep + 1);
     }
-
-    //setIsSubmitting(false);
   };
 
   const handleBack = () => {
     setCurrentStep(currentStep - 1);
   };
-
-  // // updates the inputValue state whenever the input value changes
-  // const handleInputChange = (event) => {
-  //   setInputValue(event.target.value);
-  // };
-
-  // // logs the current state of input value
-  // const handleSubmit = async (event) => {
-  //   try {
-  //     event.preventDefault(); // Prevent the default form submission behavior of a reload (we don't want to reload the page just update logs/database)
-  //     console.log("value before: ", inputValue);
-  
-  //     const result = await addMessage({ text: inputValue });
-  
-  //     console.log('Response from Cloud Function:', result.data);
-  //     //setInputValue(''); // Clear input field
-
-  //     const displayText = result.data.uppercase;
-  //     setInputValue(displayText);
-
-
-  //   } catch (error) {
-  //     console.error('Error sending data to Cloud Function:', error);
-  //   }
-
-  // };
-
-  // db.collection('messages').doc(messageId).onSnapshot((doc) => {
-  //   if (doc.exists) {
-  //     const data = doc.data();
-  //     console.log('Document data:', data);
-  //     // Handle the updated data
-  //   } else {
-  //     console.log('No such document!');
-  //   }
-  // }, (error) => {
-  //   console.error('Error fetching document:', error);
-  // });
-
   
   return (
-    <div className="App">
+    <div className="App" class="container">
     <header className="App-header">
-    <Container maxWidth="sm">
-      <Box mt={5}>
-        <Typography variant="h4" component="h1" gutterBottom>
-            Registration Form
-          </Typography>
       <form onSubmit={handleSubmit(handleNext)} noValidate>
-          {currentStep === 1 && (
-            <div>
-              <h2>Step 1</h2>
-              <label>Who are you?</label>
-              <input {...register('who', { required: true })} />
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 2 && (
-            <div>
-              <h2>Step 2</h2>
-              <label>What do you want to do?</label>
-              <input {...register('what', { required: true })} />
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 3 && (
-            <div>
-              <h2>Step 3</h2>
-              <label>How do you learn best?</label>
-              <textarea {...register('how_learn', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 4 && (
-            <div>
-              <h2>Step 4</h2>
-              <label>What is your timeline?</label>
-              <textarea {...register('timeline', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 5 && (
-            <div>
-              <h2>Step 5</h2>
-              <label>What relevant skills do you have?</label>
-              <textarea {...register('skills', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 6 && (
-            <div>
-              <h2>Step 6</h2>
-              <label>What are your project goals?</label>
-              <textarea {...register('goals', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 7 && (
-            <div>
-              <h2>Step 7</h2>
-              <label>If scoped out, what is your experimental design?</label>
-              <textarea {...register('design', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 8 && (
-            <div>
-              <h2>Step 8</h2>
-              <label>What are the features of your dataset?</label>
-              <textarea {...register('dataset', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
-          {currentStep === 9 && (
-            <div>
-              <h2>Step 9</h2>
-              <label>Do you have any additional information that you would like to submit?</label>
-              <textarea {...register('additional', { required: true })}></textarea>
-              <button type="button" onClick={handleBack}>Back</button>
-              <button type="submit">Next</button>
-            </div>
-          )}
+        <AnimatePresence wait>
+            {currentStep === 1 && (
+                <motion.div
+                key="step1"
+                variants={stepVariants}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+                className="step"
+                style={{ position: 'absolute'}}>
+                  <p>Who are you?</p>
+                  {/*'register' is provided by react hook form to pass input into form handling system*/}              
+                  <input placeholder="I am a..." {...register('who', { required: true })} />
+                  <br></br>
+                  <button type="submit">Next</button>
+                </motion.div>
+            )}
+            {currentStep === 2 && (
+                <motion.div
+                key="step2"
+                variants={stepVariants}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+                className="step"
+                style={{ position: 'absolute'}}>
+                  <p>What do you want to build?</p>
+                  <input placeholder="I want to..." {...register('what', { required: true })} />
+                  <br></br>
+                  <button type="button" onClick={handleBack}>Back</button>
+                  <button type="submit">Next</button>
+                </motion.div>
+            )}
+            {currentStep === 3 && (
+              <motion.div
+              key="step3"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="step"
+              style={{ position: 'absolute'}}>
+                <p>Do you learn better via text or video?</p>
+                <input placeholder="I learn by..." {...register('how_learn', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+            {currentStep === 4 && (
+              <motion.div
+              key="step4"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="step"
+              style={{ position: 'absolute'}}>
+                <p>How many weeks do you want to build your project in?</p>
+                <input {...register('timeline', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+            {currentStep === 5 && (
+              <motion.div
+              key="step5"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="step"
+              style={{ position: 'absolute'}}>
+                <p>What relevant skills do you have?</p>
+                <input {...register('skills', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+            {currentStep === 6 && (
+              <motion.div
+              key="step6"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="step"
+              style={{ position: 'absolute'}}>
+                <p>What are your project goals?</p>
+                <input {...register('goals', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+            {currentStep === 7 && (
+              <motion.div
+              key="step7"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="step"
+              style={{ position: 'absolute'}}>
+                <p>If scoped out, what is your experimental design?</p>
+                <input {...register('design', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+            {currentStep === 8 && (
+              <motion.div
+              key="step8"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className="step"
+              style={{ position: 'absolute'}}>
+                <p>What are the features of your dataset?</p>
+                <input {...register('dataset', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+            {currentStep === 9 && (
+            <motion.div
+            key="step9"
+            variants={stepVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            className="step"
+            style={{ position: 'absolute'}}>
+                <p>Do you have any additional information that you would like to submit?</p>
+                <input {...register('additional', { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
       </form>
-    </Box>
-    </Container>
+
+    <div class="drops">
+      <div class="drop drop-1"></div>
+      <div class="drop drop-2"></div>
+      <div class="drop drop-3"></div>
+      <div class="drop drop-4"></div>
+      <div class="drop drop-5"></div>
+    </div>
+
     </header>
   </div>
   );
