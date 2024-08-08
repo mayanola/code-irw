@@ -4,6 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useForm } from 'react-hook-form';
 import styles from './IntroForm.module.scss';
 import { motion, AnimatePresence } from 'framer-motion';
+import { queryByPlaceholderText } from '@testing-library/react';
 
 // Call your Cloud Function
 const addMessage = httpsCallable(functions, 'addMessage');
@@ -26,11 +27,13 @@ const stepVariants = {
   },
 };
 
-const questions = [
-  { text: "next q 1", field: "who" },
-  { text: "next q 2", field: "what" }
-  // Add more existing questions as needed
-];
+// const questions = [
+//   { text: "next q 1", field: "who" },
+//   { text: "next q 2", field: "what" }
+//   // Add more existing questions as needed
+// ];
+
+let result={questions:[]};
 
 function IntroForm() {
   // useState is a hook (like a digital sticky note) which creates two state variables that we can update
@@ -39,6 +42,7 @@ function IntroForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
   const { register, handleSubmit, reset } = useForm();
+  const [nextQ, setNextQ] = useState("this is the wrong q");
 
   const handleNext = async (data) => {
 
@@ -54,36 +58,52 @@ function IntroForm() {
       try {
         // trying to send info to firebase
         try {
-            // const result = await addMessage({newFormData});
-            // console.log('Response from Cloud Function:', result.data);
-            // console.log(newFormData);        
+            while (currentStep === 9) {
+              try {
+                const qData = await addMessage({newFormData});
+                result = JSON.parse(qData.data);
+                console.log(result);
+                console.log(result.questions[currentStep-9].question);
+                setNextQ(result.questions[currentStep-9].question);
+                break;
+              } catch (error) {
+                console.log('API call responded in wrong format, resending call');
+              }
+            }
           } catch (error) {
             console.error('Error sending data to Cloud Function:', error);
           }
-        // send info to Firebase
-        //alert('Form submitted successfully');
-        //reset();
-        // setCurrentStep(1);
-        // setFormData({});
         // will update in the next render cycle (ie. when next is clicked)
         setCurrentStep(10);
-
-        console.log(questions);
-        }
+      }
        catch (error) {
         console.error('Error submitting form:', error);
       }
       // submit form
-    } else if (currentStep === 9+(questions.length)){
-      alert('form done!');
+    } else if (currentStep === 9+(result.questions.length)){
+        alert('Form submitted successfully');
+        reset();
+        setCurrentStep(1);
+        setFormData({});
+      // we want to submit to new fb func to store in cloud
+      // loop until info obtained?
+      // 1. use this info to generate a plan via API call
+      // 2. retrieve plan + display it to user
+      // 3. input box + functionality to ask qs ab plan/regenerate/specify things
+      // 4. loop until user happy w plan?
+      // 5. send to next page -> generate modules
     }
       else {
+        if (currentStep > 9 ) {
+          setNextQ(result.questions[currentStep-9].question);
+        }
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
     setCurrentStep(currentStep - 1);
+    setNextQ(result.questions[currentStep-9].question);
   };
 
   // const handleAddQuestion = (newQuestionText) => {
@@ -242,33 +262,46 @@ function IntroForm() {
               </motion.div>
             )}
 
-
-
- 
-            {currentStep >= 10 && (
-              <motion.div
-                key={currentStep}
-                variants={stepVariants}
-                initial="initial"
-                animate="enter"
-                exit="exit"
-                className="step"
-                style={{ position: 'absolute' }}
-              >
-                <p>{questions[currentStep-10].text}</p>
-                <input
-                  placeholder={questions[currentStep-10].text}
-                  {...register(questions[currentStep-10].field, { required: true })}
-                />
-                <br />
-                <button type="button" onClick={handleBack} disabled={currentStep === 0}>
-                  Back
-                </button>
-                <button type="submit">
-                  {currentStep === questions.length - 1 ? 'Submit' : 'Next'}
-                </button>
+          {currentStep >= 10 && (
+            <motion.div
+            key={`step${currentStep}`}
+            variants={stepVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            className={styles.step}
+            style={{ position: 'absolute'}}>
+                <p>{nextQ}</p>
+                <input {...register("additional info", { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit">Next</button>
               </motion.div>
             )}
+            {/* next need to figure out how to retain info/in input boxes as well */}
+
+            {/* {currentStep >= 10 && (
+            //   <motion.div
+            //     key={currentStep}
+            //     variants={stepVariants}
+            //     initial="initial"
+            //     animate="enter"
+            //     exit="exit"
+            //     className="step"
+            //     style={{ position: 'absolute' }}
+            //   >
+            //     { <p>{result.questions[currentStep-9].question}</p> }
+              // <p>{nextQ}</p>
+            //     <input {...register('', { required: true })} />
+            //     <br></br>
+            //     <button type="button" onClick={handleBack} disabled={currentStep === 0}>
+            //       Back
+            //     </button>
+            //     <button type="submit">
+            //       { {currentStep === result.questions.length - 1 ? 'Submit' : 'Next'} }
+            //     </button>
+            //   </motion.div>
+            // )} */}
           </AnimatePresence> 
       </form>
 
