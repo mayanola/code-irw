@@ -4,10 +4,11 @@ import { httpsCallable } from 'firebase/functions';
 import { useForm } from 'react-hook-form';
 import styles from './IntroForm.module.scss';
 import { motion, AnimatePresence } from 'framer-motion';
-import { queryByPlaceholderText } from '@testing-library/react';
+import { FollowTheSigns } from '@mui/icons-material';
 
 // Call your Cloud Function
-const addMessage = httpsCallable(functions, 'addMessage');
+const followUp = httpsCallable(functions, 'followUp');
+const generatePlan = httpsCallable(functions, 'generatePlan');
 
 const stepVariants = {
   initial: {
@@ -27,90 +28,103 @@ const stepVariants = {
   },
 };
 
-// const questions = [
-//   { text: "next q 1", field: "who" },
-//   { text: "next q 2", field: "what" }
-//   // Add more existing questions as needed
-// ];
-
 let result={questions:[]};
 
 function IntroForm() {
   // useState is a hook (like a digital sticky note) which creates two state variables that we can update
   // we use this instead of a typical 'let' variable bc when useState updates the state it informs React to re-render which updates the UI (normal variable don't)
-  // const [inputValue, setInputValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
-  const { register, handleSubmit, reset } = useForm();
-  const [nextQ, setNextQ] = useState("this is the wrong q");
+  const { register, handleSubmit, reset, setValue } = useForm();
+  const [followUpQs, setFollowUpQs] = useState();
+  const [nextQ, setNextQ] = useState();
+  const [followupLength, setfollowupLength] = useState();
+  const [plan, setPlan] = useState();
 
   const handleNext = async (data) => {
 
     const newFormData = { ...formData, ...data };
     setFormData(newFormData);
-    reset();
-
       
     // submitting form
     if (currentStep === 9) {
-      //setIsSubmitting(true);
+      setIsSubmitting(true);
       // triyng to submit form
       try {
         // trying to send info to firebase
         try {
             while (currentStep === 9) {
               try {
-                const qData = await addMessage({newFormData});
-                result = JSON.parse(qData.data);
-                console.log(result);
-                console.log(result.questions[currentStep-9].question);
-                setNextQ(result.questions[currentStep-9].question);
+                const qData = await followUp({newFormData});
+                const result = JSON.parse(qData.data);
+                
+                setFollowUpQs(result.questions);
+                setfollowupLength(result.questions.length);
+                setNextQ(result.questions[0].question);
+                reset();
                 break;
               } catch (error) {
-                console.log('API call responded in wrong format, resending call');
+                console.log('API call responded in wrong format, resending call', error);
               }
             }
           } catch (error) {
             console.error('Error sending data to Cloud Function:', error);
+          } finally {
+            // will update in the next render cycle (ie. when next is clicked)
+            setCurrentStep(currentStep + 1);
+            setIsSubmitting(false);
           }
-        // will update in the next render cycle (ie. when next is clicked)
-        setCurrentStep(10);
       }
        catch (error) {
         console.error('Error submitting form:', error);
       }
       // submit form
-    } else if (currentStep === 9+(result.questions.length)){
-        alert('Form submitted successfully');
-        reset();
-        setCurrentStep(1);
-        setFormData({});
+    } else if (currentStep === 9+(followupLength)){
+        setIsSubmitting(true);
+        try {
+          console.log(newFormData);
+          const plan = await generatePlan({newFormData});
+          setPlan(plan.data);
+          setCurrentStep(currentStep + 1);
+        } catch (error) {
+          console.error('Error retrieving plan: ', error);
+        } finally {
+          reset();
+          //setCurrentStep(1);
+          setIsSubmitting(false);
+        }
       // we want to submit to new fb func to store in cloud
       // loop until info obtained?
-      // 1. use this info to generate a plan via API call
-      // 2. retrieve plan + display it to user
+      // 1. use this info to generate a plan via API call - DONE
+      // 2. retrieve plan + display it to user -> to do next
       // 3. input box + functionality to ask qs ab plan/regenerate/specify things
       // 4. loop until user happy w plan?
       // 5. send to next page -> generate modules
-    }
+    } 
       else {
-        if (currentStep > 9 ) {
-          setNextQ(result.questions[currentStep-9].question);
+        if (currentStep > 9 && currentStep < 10+followupLength) {
+          setNextQ(followUpQs[currentStep-9].question);
         }
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
-    setCurrentStep(currentStep - 1);
-    setNextQ(result.questions[currentStep-9].question);
+    //currentStep may be outdated so must calculate prev step first
+    const prevStep = currentStep - 1;
+    setCurrentStep(prevStep);
+    console.log(prevStep);
+    setValue(`answer${prevStep}`, formData[`answer${prevStep}`] || '');
   };
 
-  // const handleAddQuestion = (newQuestionText) => {
-  //   const newQuestion = { text: newQuestionText, field: `new_field_${questions.length}` };
-  //   setQuestions([...questions, newQuestion]);
-  //   setCurrentStep(questions.length); // Go to the new question step
-  // };
+  // need to use this because hooks update asynchronously so previous q was not showing up properly
+  useEffect(() => {
+    if (currentStep >= 10 && currentStep < 10 + followupLength) {
+      const question = followUpQs[currentStep - 10]?.question || '';
+      setNextQ(question);
+    }
+  }, [currentStep, followUpQs, followupLength]);
   
   return (
     <div className={styles.container}>
@@ -128,7 +142,7 @@ function IntroForm() {
                 style={{ position: 'absolute'}}>
                   <p>Who are you?</p>
                   {/*'register' is provided by react hook form to pass input into form handling system*/}              
-                  <input placeholder="I am a..." {...register('who', { required: true })} />
+                  <input placeholder="I am a..." {...register('answer1', { required: true })} />
                   <br></br>
                   <button type="submit">Next</button>
                 </motion.div>
@@ -143,7 +157,7 @@ function IntroForm() {
                 className={styles.step}
                 style={{ position: 'absolute'}}>
                   <p>What do you want to build?</p>
-                  <input placeholder="I want to..." {...register('what', { required: true })} />
+                  <input placeholder="I want to..." {...register('answer2', { required: true })} />
                   <br></br>
                   <button type="button" onClick={handleBack}>Back</button>
                   <button type="submit">Next</button>
@@ -159,7 +173,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>Do you learn better via text or video?</p>
-                <input placeholder="I learn by..." {...register('how_learn', { required: true })} />
+                <input placeholder="I learn by..." {...register('answer3', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -175,7 +189,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>How many weeks do you want to build your project in?</p>
-                <input {...register('timeline', { required: true })} />
+                <input {...register('answer4', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -191,7 +205,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>What relevant skills do you have?</p>
-                <input {...register('skills', { required: true })} />
+                <input {...register('answer5', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -207,7 +221,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>What are your project goals?</p>
-                <input {...register('goals', { required: true })} />
+                <input {...register('answer6', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -223,7 +237,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>If scoped out, what is your experimental design?</p>
-                <input {...register('design', { required: true })} />
+                <input {...register('answer7', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -239,7 +253,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>What are the features of your dataset?</p>
-                <input {...register('dataset', { required: true })} />
+                <input {...register('answer8', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -255,14 +269,17 @@ function IntroForm() {
             className={styles.step}
             style={{ position: 'absolute'}}>
                 <p>Do you have any additional information that you would like to submit?</p>
-                <input {...register('additional', { required: true })} />
+                <input {...register('answer9', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
-                <button type="submit">Next</button>
+                {/* <button type="submit">Next</button> */}
+                <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Next'}
+                </button>
               </motion.div>
             )}
 
-          {currentStep >= 10 && (
+          {currentStep >= 10 && currentStep < 10+followupLength && (
             <motion.div
             key={`step${currentStep}`}
             variants={stepVariants}
@@ -272,36 +289,35 @@ function IntroForm() {
             className={styles.step}
             style={{ position: 'absolute'}}>
                 <p>{nextQ}</p>
-                <input {...register("additional info", { required: true })} />
+                <input {...register(`answer${currentStep}`, { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
-                <button type="submit">Next</button>
+                <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Next'}
+                </button>
               </motion.div>
             )}
-            {/* next need to figure out how to retain info/in input boxes as well */}
-
-            {/* {currentStep >= 10 && (
-            //   <motion.div
-            //     key={currentStep}
-            //     variants={stepVariants}
-            //     initial="initial"
-            //     animate="enter"
-            //     exit="exit"
-            //     className="step"
-            //     style={{ position: 'absolute' }}
-            //   >
-            //     { <p>{result.questions[currentStep-9].question}</p> }
-              // <p>{nextQ}</p>
-            //     <input {...register('', { required: true })} />
-            //     <br></br>
-            //     <button type="button" onClick={handleBack} disabled={currentStep === 0}>
-            //       Back
-            //     </button>
-            //     <button type="submit">
-            //       { {currentStep === result.questions.length - 1 ? 'Submit' : 'Next'} }
-            //     </button>
-            //   </motion.div>
-            // )} */}
+            {currentStep >= 10+followupLength && (
+            <motion.div
+            key={`step${currentStep}`}
+            variants={stepVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            className={styles.step}
+            style={{ position: 'absolute'}}>
+                {/* <p>{plan}</p> */}
+                {/* in designing plan:  make plan smaller + make it show up as numbered list? or something like that
+                need to change css*/}
+                <p>plan goes here</p>
+                <input {...register(`planFollowUp`, { required: true })} />
+                <br></br>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Next'}
+                </button>
+              </motion.div>
+            )}
           </AnimatePresence> 
       </form>
 

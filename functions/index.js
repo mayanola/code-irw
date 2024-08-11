@@ -46,52 +46,11 @@ admin.initializeApp();
 // };
 
 // Take the text parameter passed to this HTTP endpoint and insert it into Firestore under the path /messages/:documentId/original
-exports.addMessage = functions.https.onRequest(async (req, res) => {
+exports.followUp = functions.https.onRequest(async (req, res) => {
   cors(req, res, async () => {
-    try {
-      const { who, what, how_learn, timeline, skills, goals, design, dataset, additional } = req.body.data.newFormData;
+    const {who, what, how_learn, timeline, skills, goals, design, dataset, additional} = req.body.data.newFormData;
 
-    // // Call GPT API
-    // const userMessage = {
-    //   role: 'user',
-    //   content: `Who: ${who}, What: ${what}, How to Learn: ${how_learn}, Timeline: ${timeline}, Skills: ${skills}, Goals: ${goals}, Design: ${design}, Dataset: ${dataset}, Additional: ${additional}`
-    // };
-
-    // try {
-    //   const completions = await openai.chat.completions.create({
-    //     messages: [
-    //       systemMessage,
-    //       userMessage
-    //     ],
-    //     model: "gpt-4",
-    //   });
-
-    //   const apiResponse = completions.choices[0].message.content;
-
-      const writeResult = await admin
-        .firestore()
-        .collection("messages")
-        .add({
-          who: who,
-          what: what,
-          how_learn: how_learn,
-          timeline: timeline,
-          skills: skills,
-          goals: goals,
-          design: design,
-          dataset: dataset,
-          additional: additional,
-         // plan: apiResponse,
-          timestamp: Date.now()
-        });
-
-      // TO DO: CRAFT SYSTEM + USER MESSAGE to get follow up qs
-      // followuSystemMessage = {
-      //     role: "system",
-      //     content: "You are tasked with generating a plan specific to the user's individual needs to help them learn how to build a project with a limited programming background. Return this plan as a json and be as specific as possible."
-      //   };
-
-      followuSystemMessage = {
+    followuSystemMessage = {
         role: "system",
         content: `You are tasked with generating a plan specific to the user's individual needs to help them 
         learn how to build a project with a limited programming background. What further information do you need
@@ -126,40 +85,112 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
           content: "This is the information you already have about the user. Only return a json in your response and no other words at all:"+
           `Who: ${who}, What: ${what}, How to Learn: ${how_learn}, Timeline: ${timeline}, Skills: ${skills}, Goals: ${goals}, Design: ${design}, Dataset: ${dataset}, Additional: ${additional}`
         };
-    
-      // const completions = await openai.chat.completions.create({
-      //   messages: [
-      //     followuSystemMessage,
-      //     followupUserMesssage
-      //   ],
-      //   model: "gpt-4",
-      // });
-  
-      //const apiResponse = completions.choices[0].message.content;
 
-      // res.status(200).json({ result: apiResponse});
-      res.status(200).json({ result: `{
-          "questions": [
+      try {
+    
+        const followUpCompletions = await openai.chat.completions.create({
+          messages: [
+            followuSystemMessage,
+            followupUserMesssage
+          ],
+          model: "gpt-4",
+        });
+    
+        const followUpResponse = followUpCompletions.choices[0].message.content;
+
+        res.status(200).json({ result: followUpResponse});
+      } catch (error) {
+        console.error("Error calling OpenAI API:", error);
+        res.status(500).json({ error: "Failed to call OpenAI API" });
+      }
+    });
+});
+
+exports.generatePlan = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    try {
+      const data = req.body.data.newFormData;
+      functions.logger.log(data);
+      const info = JSON.stringify(data);
+      functions.logger.log(info);
+
+
+
+      // for each item in data, feed to datbase
+
+      try {
+        // for (const [key, value] of Object.entries(info)) {
+        //   const writeResult = await admin
+        //     .firestore()
+        //     .collection("messages")
+        //     .add({
+        //       question: key,
+        //       response: value,
+        //       timestamp: Date.now()
+        //     });
+
+        const writeResult = await admin
+            .firestore()
+            .collection("messages")
+            .add({
+              ...info,
+              timestamp: Date.now()
+            });
+
+          functions.logger.log(`Document written with ID: ${writeResult.id}`);
+      } catch (error) {
+      functions.logger.log("Error writing document: ", error);
+      }
+
+      generatePlanSystemMessage = {
+        role: "system",
+        content: `You are tasked with generating a plan specific to the user's individual needs to help them 
+        learn how to build a project with a limited programming background. Generate a plan only in this JSON format:
+        {
+          "Project Summary": "Biology Data Analysis",
+          "Steps": [
             {
-              "question": "What is the specific project you want to build?"
+              "Step 1": "Step heading 1",
+              "Substeps": [
+                "Go to website xyz.com",
+                "Download xyz"
+              ]
             },
             {
-              "question": "What is your current level of programming knowledge?"
+              "Step 2": "Step heading 2",
+              "Substeps": [
+                "Do this step"
+              ]
             },
             {
-              "question": "What programming languages are you comfortable with?"
-            },
-            {
-              "question": "Have you ever worked on a similar project before?" 
-            },
-            {
-              "question": "What tools and software are you familiar with and comfortable using?"
-            },
-            {
-              "question": "What resources are you currently using to learn programming?"
+              "Step 3": "Step heading 3",
+              "Substeps": [
+                "do this step"
+              ]
             }
-          ]
-        }`});
+          ],
+          "Name": "Carolyn"
+        }`
+      };
+
+      const generatePlanUserMesssage = {
+          role: 'user',
+          content: `This is the information you already have about the user. Only return a json in your response and no 
+          other words at all: ${data}`
+        };
+    
+      const generatePlanCompletions = await openai.chat.completions.create({
+        messages: [
+          generatePlanSystemMessage,
+          generatePlanUserMesssage
+        ],
+        model: "gpt-4",
+      });
+  
+      const apiResponse = generatePlanCompletions.choices[0].message.content;
+
+      functions.logger.log(apiResponse);
+      res.status(200).json({ result: apiResponse});
     } catch (error) {
       console.error("Error calling OpenAI API:", error);
       res.status(500).json({ error: "Failed to call OpenAI API" });
