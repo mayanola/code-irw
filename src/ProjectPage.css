@@ -17,6 +17,7 @@
     border-right: 1px solid #ddd;
     padding: 20px;
     transition: left 0.3s ease;
+    overflow-y: auto; /* Enable vertical scrolling */
 }
 
 /* Hover effect to show the side pane */

@@ -13,36 +13,7 @@ admin.initializeApp();
 
 const systemMessage = {
   role: "system",
-  content: `Can you make a plan for how to execute this project? Output only a JSON. 
-  The JSON should have the following feilds: Project Summary, Steps (and each step can have substeps), and Name 
-  This should be th format: 
-{
-  "Project Summary": "Biology Data Analysis",
-  "Steps": [
-    {
-      "Step 1": "Download VSCODE",
-      "Substeps": [
-        "Go to VSCODE.com",
-        "Download it"
-      ]
-    },
-    {
-      "Step 2": "Learn R",
-      "Substeps": [
-        "Download R",
-        "Learn R very well"
-      ]
-    },
-    {
-      "Step 3": "Learn Python",
-      "Substeps": [
-        "Download Python",
-        "Learn Python very well"
-      ]
-    }
-  ],
-  "Name": "Carolyn"
-}`
+  content: `You are an educational tool guiding students through each step of the way through a project plan. Your job is to generate detailed instructions for each substep in the context of the provided plan.`
 };
 
 // Take the text parameter passed to this HTTP endpoint and insert it into Firestore under the path /messages/:documentId/original
@@ -89,5 +60,85 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
       console.error("Error calling OpenAI API:", error);
       res.status(500).json({ error: "Failed to call OpenAI API" });
     }
+  });
+});
+
+// // Take the text parameter passed to this HTTP endpoint and insert it into Firestore under the path /messages/:documentId/original
+// exports.generateInstructions = functions.https.onRequest(async (req, res) => {
+//   cors(req, res, async () => {
+//     const { plan, substep } = req.body;
+//     console.log("Request body:", { plan, step, substep });
+
+//     const generateInstructions = async (plan, substep) => {
+//       try {
+//         const completions = await openai.chat.completions.create({
+//           messages: [
+//             systemMessage,
+//             {
+//               role: 'user',
+//               content: `Generate instructions for substep: ${substep}`,
+//             },
+//           ],
+//           model: "gpt-4",
+//         });
+
+//         const apiResponse = completions.choices[0].message.content;
+
+//         // Update the plan with the generated instructions for the specific substep
+//         const updatedPlan = JSON.parse(plan);
+//         const steps = updatedPlan.Steps;
+//         for (let i = 0; i < steps.length; i++) {
+//           const step = steps[i];
+//           if (step.Substeps.includes(substep)) {
+//             step.Instructions = apiResponse;
+//             break;
+//           }
+//         }
+//         res.status(200).json({ result: steps });
+//       } catch (error) {
+//         res.status(500).json({ error: "Failed to call OpenAI API" });
+//       }
+//     };
+
+//   })});
+exports.generateInstructions = functions.https.onRequest(async (req, res) => {
+  console.log("Function started");
+  console.log("Complete Request Body:", req.body);  // Log the full request body
+
+  cors(req, res, async () => {
+      // Access the plan, step, and substep from req.body.data
+      const { plan, step, substep } = req.body.data;
+      console.log("Request body:", { plan, step, substep });
+
+      const planString = typeof plan === 'string' ? plan : JSON.stringify(plan);
+      console.log("Plan string:", planString);
+
+      try {
+          console.log("Calling OpenAI API...");
+          const completions = await openai.chat.completions.create({
+              messages: [
+                  //systemMessage,
+                  {
+                      role: 'user',
+                      content: `You are an educational tool guiding students through each step of the way through a project plan. Your job is to generate instructions for a given step. Here is the project plan: ${planString}. Generate detailed instructions for the following substep in the context of the provided plan: Step: ${step}, Substep: ${substep}. Can you also include a video link/ tutorial? `,
+                  },
+              ],
+              model: "gpt-4",
+          });
+
+          const apiResponse = completions.choices[0].message.content;
+          console.log("API Response:", apiResponse);
+
+          // Wrapping the response in a data field
+          const responseData = { data: { instructions: apiResponse } };
+          console.log("Response data:", responseData);
+
+          res.status(200).json(responseData);
+      } catch (error) {
+          console.error("Error calling OpenAI API:", error);
+          res.status(500).json({ data: { error: error.message } });
+      }
+
+      console.log("Function finished");
   });
 });
