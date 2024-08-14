@@ -142,3 +142,49 @@ exports.generateInstructions = functions.https.onRequest(async (req, res) => {
       console.log("Function finished");
   });
 });
+
+exports.addProjectTaskToPortfolio = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    // JSON object to insert
+    const temp_json_tasks = {
+      "Project Summary": "Design Portfolio Website",
+      "Steps": [
+        {
+          "Step 1": "Set Up Development Environment",
+          "Substeps": [
+            "Download and install Visual Studio Code (VSCODE)",
+            "Install Node.js and npm (Node Package Manager)",
+            "Verify installation by running `node -v` and `npm -v` in the terminal"
+          ]
+        },
+        {
+          "Step 2": "Learn the Basics of HTML, CSS, and JavaScript",
+          "Substeps": [
+            "Complete an online course or tutorial on HTML, CSS, and JavaScript",
+            "Practice by building simple static web pages",
+            "Familiarize yourself with browser developer tools (F12 in most browsers)"
+          ]
+        },
+        // Additional steps omitted for brevity...
+      ],
+      "Name": "Ishita"
+    };
+
+    try {
+      // Reference to the specific document
+      const userId = 'ishita'; // Document ID for Ishita
+      const projectId = 'PersonalDesignPortfolio'; // Document ID for the Personal Design Portfolio
+
+      // Reference to the 'PersonalDesignPortfolio' document in the 'Projects' collection
+      const projectRef = admin.firestore().collection('users').doc(userId).collection('Projects').doc(projectId);
+
+      // Insert the JSON object into Firestore
+      await projectRef.set(temp_json_tasks);
+
+      res.status(200).json({ result: `Project tasks added to 'PersonalDesignPortfolio' for user '${userId}'.` });
+    } catch (error) {
+      console.error("Error adding document to Firestore:", error);
+      res.status(500).json({ error: "Failed to add project tasks to Firestore" });
+    }
+  });
+});
