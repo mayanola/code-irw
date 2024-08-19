@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
+import './ProjectPage.css'; 
+
+
+// A temporary JSON object to represent an example set of tasks
+// In the future, this will be passed in to the component or 
+// loaded from the database.
+
 import './ProjectPage.css'; // Import the CSS file
 import { functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
@@ -125,6 +132,14 @@ const temp_json_tasks1 = {
 
 
 const ProjectPage = () => {
+    const userID = localStorage.getItem('userID');
+    const projectID = localStorage.getItem('projectID');
+    const plan = localStorage.getItem('plan');
+
+    console.log(userID, projectID);
+    console.log(plan);
+
+    // State to keep track of the checked status of each substep
     const [checked, setChecked] = useState(
         temp_json_tasks.Steps.map(step =>
             step.Substeps.map(() => false)
@@ -168,8 +183,11 @@ const ProjectPage = () => {
     
     return (
         <div className="container">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
             <div className="side-pane">
                 <h1>{temp_json_tasks["Project Summary"]}</h1>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+                {/* Display each of the steps */}
                 <div>
                     {temp_json_tasks.Steps.map((step, stepIndex) => (
                         <div key={stepIndex}>

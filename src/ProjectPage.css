@@ -1,26 +1,52 @@
-/* Container to hold the side pane */
-.container {
-    position: relative;
-    height: 100vh;
-    width: 100%;
-    overflow: hidden;
-}
-
-/* Styles for the side pane */
 .side-pane {
     position: fixed;
-    left: -250px; /* Hide the pane off-screen */
+    left: -290px; /* Hide the pane off-screen */
     top: 0;
     bottom: 0;
-    width: 250px;
-    background-color: #f4f4f4;
-    border-right: 1px solid #ddd;
+    height: 90%;
+    width: 300px;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.3); 
+    border-right: 1px solid rgba(255, 255, 255, 0.5); 
+    border-radius: 20px;
     padding: 20px;
     transition: left 0.3s ease;
+    text-decoration: none;
+    font-weight: 500;
+    color: #fff;
+    opacity: 0.7;
+    margin-top: 0;
+    margin: 1em;
+    margin-bottom: 60px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+a {
+    text-decoration: none;
+    font-weight: 800;
+    color: #fff;
+    opacity: 0.7;
+    margin-top: 0;
+    margin: 1em;
+    margin-bottom: 60px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+a:hover {
+    text-shadow: none;
+    color: #28b362;
     overflow-y: auto; /* Enable vertical scrolling */
 }
 
-/* Hover effect to show the side pane */
 .side-pane:hover {
-    left: 0; /* Slide the pane into view */
+    left: 0; 
+}
+
+.arrow-icon {
+    font-size: 32px; 
+    color: #fff;
+    position: absolute; 
+    top: 50%; 
+    right: 20px; 
+
 }
