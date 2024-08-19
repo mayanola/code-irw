@@ -4,11 +4,23 @@ import { httpsCallable } from 'firebase/functions';
 import { useForm } from 'react-hook-form';
 import styles from './IntroForm.module.scss';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FollowTheSigns } from '@mui/icons-material';
+import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { styled } from '@mui/system';
+import { useNavigate } from 'react-router-dom';
+
+const CustomCheckbox = styled(Checkbox)({
+  color: '#fff',
+  '&.Mui-checked': {
+    color: '#fff',
+  },
+});
 
 // Call your Cloud Function
+const generateSkills = httpsCallable(functions, 'generateSkills');
+const generateSummary = httpsCallable(functions, 'generateSummary');
 const followUp = httpsCallable(functions, 'followUp');
 const generatePlan = httpsCallable(functions, 'generatePlan');
+
 
 const stepVariants = {
   initial: {
@@ -41,20 +53,76 @@ function IntroForm() {
   const [nextQ, setNextQ] = useState();
   const [followupLength, setfollowupLength] = useState();
   const [plan, setPlan] = useState();
+  const [skills, setSkills] = useState();
+  const [selectedSkills, setSelectedSkills] = useState({});
+  const [summary, setSummary] = useState();
+  const navigate = useNavigate();
+
 
   const handleNext = async (data) => {
 
     const newFormData = { ...formData, ...data };
     setFormData(newFormData);
       
-    // submitting form
-    if (currentStep === 9) {
+    if (currentStep === 8) {
       setIsSubmitting(true);
-      // triyng to submit form
-      try {
-        // trying to send info to firebase
+        try {
+            while (currentStep === 8) {
+              try {
+                const skillsData = await generateSkills({newFormData});
+                const skillsJSON = JSON.parse(skillsData.data);
+                console.log(skillsJSON.skills[0].skill)
+                console.log(JSON.parse(skillsData.data));
+                setSkills(skillsJSON);
+                break;
+              } catch (error) {
+                console.log('API call responded in wrong format, resending call', error);
+              }
+            }
+          } catch (error) {
+        console.error('Error submitting form:', error);
+       } finally {
+        // will update in the next render cycle (ie. when next is clicked)
+        setCurrentStep(currentStep + 1);
+        setIsSubmitting(false);
+       }
+    } else if (currentStep === 9) {
+        setIsSubmitting(true);
         try {
             while (currentStep === 9) {
+              // accesses the keys of the jsons in the skills array (ie. skill names) that are checked and adds them to the form data
+              const selectedSkillNames = Object.keys(selectedSkills).filter(skill => selectedSkills[skill]);
+              newFormData.selectedSkills = selectedSkillNames;
+
+              // Update formData state with the new information
+              setFormData(newFormData);
+              console.log(newFormData);
+              try {
+                // get summary from API
+                const summary = await generateSummary({newFormData});
+                console.log(summary.data);
+                setSummary(summary.data);
+
+                break;
+              } catch (error) {
+                console.log('API call responded in wrong format, resending call', error);
+              }
+            }
+          } catch (error) {
+        console.error('Error submitting form:', error);
+       } finally {
+        // will update in the next render cycle (ie. when next is clicked)
+        setCurrentStep(currentStep + 1);
+        setIsSubmitting(false);
+       }
+      // submit form
+    }  else if (currentStep === 10) {
+      // here we send the answers to the API and generate follow up questions
+        setIsSubmitting(true);
+        try {
+            while (currentStep === 10) {
+              //want to generate plan summary here
+              console.log(newFormData);
               try {
                 const qData = await followUp({newFormData});
                 const result = JSON.parse(qData.data);
@@ -68,43 +136,40 @@ function IntroForm() {
                 console.log('API call responded in wrong format, resending call', error);
               }
             }
-          } catch (error) {
-            console.error('Error sending data to Cloud Function:', error);
-          } finally {
-            // will update in the next render cycle (ie. when next is clicked)
-            setCurrentStep(currentStep + 1);
-            setIsSubmitting(false);
-          }
-      }
-       catch (error) {
-        console.error('Error submitting form:', error);
-      }
-      // submit form
-    } else if (currentStep === 9+(followupLength)){
+            } catch (error) {
+          console.error('Error submitting form:', error);
+        } finally {
+          // will update in the next render cycle (ie. when next is clicked)
+          setCurrentStep(currentStep + 1);
+          setIsSubmitting(false);
+        }
+        // submit form
+    } else if (currentStep === 10+(followupLength)){
+      //follow up questions
         setIsSubmitting(true);
         try {
           console.log(newFormData);
           const plan = await generatePlan({newFormData});
-          setPlan(plan.data);
-          setCurrentStep(currentStep + 1);
+          console.log(plan.data.userID);
+
+          localStorage.setItem('userID', plan.data.userID);
+          localStorage.setItem('projectID', plan.data.projectID);
+          localStorage.setItem('plan', plan.data.apiResponse);
+
+          //setPlan(plan.data);
+          //setCurrentStep(currentStep + 1);
         } catch (error) {
           console.error('Error retrieving plan: ', error);
         } finally {
-          reset();
+          //reset();
           //setCurrentStep(1);
-          setIsSubmitting(false);
+          //setIsSubmitting(false);
+          navigate('/project');
         }
-      // we want to submit to new fb func to store in cloud
-      // loop until info obtained?
-      // 1. use this info to generate a plan via API call - DONE
-      // 2. retrieve plan + display it to user -> to do next
-      // 3. input box + functionality to ask qs ab plan/regenerate/specify things
-      // 4. loop until user happy w plan?
-      // 5. send to next page -> generate modules
     } 
       else {
-        if (currentStep > 9 && currentStep < 10+followupLength) {
-          setNextQ(followUpQs[currentStep-9].question);
+        if (currentStep > 10 && currentStep < 11+followupLength) {
+          setNextQ(followUpQs[currentStep-10].question);
         }
       setCurrentStep(currentStep + 1);
     }
@@ -120,11 +185,21 @@ function IntroForm() {
 
   // need to use this because hooks update asynchronously so previous q was not showing up properly
   useEffect(() => {
-    if (currentStep >= 10 && currentStep < 10 + followupLength) {
-      const question = followUpQs[currentStep - 10]?.question || '';
+    if (currentStep >= 11 && currentStep < 11 + followupLength) {
+      const question = followUpQs[currentStep - 11]?.question || '';
       setNextQ(question);
     }
   }, [currentStep, followUpQs, followupLength]);
+
+  // Handle change in checkbox state
+  const handleCheckboxChange = (event) => {
+    const { name, checked } = event.target;
+    setSelectedSkills((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+  };
+
   
   return (
     <div className={styles.container}>
@@ -204,7 +279,7 @@ function IntroForm() {
               exit="exit"
               className={styles.step}
               style={{ position: 'absolute'}}>
-                <p>What relevant skills do you have?</p>
+                <p>What are your project goals?</p>
                 <input {...register('answer5', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
@@ -220,8 +295,8 @@ function IntroForm() {
               exit="exit"
               className={styles.step}
               style={{ position: 'absolute'}}>
-                <p>What are your project goals?</p>
-                <input {...register('answer6', { required: true })} />
+                <p>If scoped out, what is your experimental design?</p>
+                <input {...register('answer6', { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
@@ -236,32 +311,16 @@ function IntroForm() {
               exit="exit"
               className={styles.step}
               style={{ position: 'absolute'}}>
-                <p>If scoped out, what is your experimental design?</p>
-                <input {...register('answer7', { required: true })} />
+                <p>What are the features of your dataset?</p>
+                <input {...register('answer7', { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
               </motion.div>
             )}
             {currentStep === 8 && (
-              <motion.div
-              key="step8"
-              variants={stepVariants}
-              initial="initial"
-              animate="enter"
-              exit="exit"
-              className={styles.step}
-              style={{ position: 'absolute'}}>
-                <p>What are the features of your dataset?</p>
-                <input {...register('answer8', { required: true })} />
-                <br></br>
-                <button type="button" onClick={handleBack}>Back</button>
-                <button type="submit">Next</button>
-              </motion.div>
-            )}
-            {currentStep === 9 && (
             <motion.div
-            key="step9"
+            key="step8"
             variants={stepVariants}
             initial="initial"
             animate="enter"
@@ -269,17 +328,69 @@ function IntroForm() {
             className={styles.step}
             style={{ position: 'absolute'}}>
                 <p>Do you have any additional information that you would like to submit?</p>
-                <input {...register('answer9', { required: true })} />
+                <input {...register('answer8', { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
-                {/* <button type="submit">Next</button> */}
                 <button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting...' : 'Next'}
                 </button>
               </motion.div>
             )}
-
-          {currentStep >= 10 && currentStep < 10+followupLength && (
+          
+          {currentStep === 9 && (
+              <motion.div
+              key="step9"
+              variants={stepVariants}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              className={styles.step}
+              style={{ position: 'absolute'}}>
+                <FormGroup className={styles.formGroup}>
+                  <p style={{ fontSize: '20px', paddingTop: '300px', marginBottom: '30px'}} className={styles.formGroup}>Select the skills you already have</p>
+                  {skills?.skills?.length > 0 ? (
+                    skills.skills.map((skill, index) => (
+                      <FormControlLabel
+                        key={index}
+                        control={
+                          <CustomCheckbox
+                            checked={!!selectedSkills[skill.skill]}
+                            onChange={handleCheckboxChange}
+                            name={skill.skill}
+                            className={styles.checkbox}
+                          />
+                        }
+                        label={<span className={styles.checkboxLabel}>{skill.skill}</span>}
+                        className={styles.formControlLabel}
+                      />
+                    ))
+                  ) : (
+                    <p>No skills available</p>
+                  )}
+                </FormGroup>
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Next'}
+                </button>
+              </motion.div>
+            )}{currentStep === 10 && (
+              <motion.div
+                key="step10"
+                variants={stepVariants}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+                className={styles.step}
+                style={{ position: 'absolute'}}>
+                <p style={{ fontSize: '20px', paddingTop: '200px', marginBottom: '30px'}}>Is this an accurate summary? Clarify what is wrong if not. <br/><br/>{summary}</p>
+                <input {...register('answer10', { required: false })} />
+                <button type="button" onClick={handleBack}>Back</button>
+                <button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Next'}
+                </button>
+              </motion.div>
+            )}
+            {currentStep >= 11 && currentStep < 11+followupLength && (
             <motion.div
             key={`step${currentStep}`}
             variants={stepVariants}
@@ -289,28 +400,7 @@ function IntroForm() {
             className={styles.step}
             style={{ position: 'absolute'}}>
                 <p>{nextQ}</p>
-                <input {...register(`answer${currentStep}`, { required: true })} />
-                <br></br>
-                <button type="button" onClick={handleBack}>Back</button>
-                <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Next'}
-                </button>
-              </motion.div>
-            )}
-            {currentStep >= 10+followupLength && (
-            <motion.div
-            key={`step${currentStep}`}
-            variants={stepVariants}
-            initial="initial"
-            animate="enter"
-            exit="exit"
-            className={styles.step}
-            style={{ position: 'absolute'}}>
-                {/* <p>{plan}</p> */}
-                {/* in designing plan:  make plan smaller + make it show up as numbered list? or something like that
-                need to change css*/}
-                <p>plan goes here</p>
-                <input {...register(`planFollowUp`, { required: true })} />
+                <input {...register(`answer${currentStep}`, { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit" disabled={isSubmitting}>
