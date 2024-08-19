@@ -1,20 +1,32 @@
 .side-pane {
     position: fixed;
-    left: -290px; /* Hide the pane off-screen */
-    top: 0;
-    bottom: 0;
-    height: 90%;
+    left: -310px; /* Hide the pane off-screen */
+    top: 5px;
+    bottom: 5px;
     width: 300px;
     overflow: auto;
-    background: rgba(255, 255, 255, 0.3); 
-    border-right: 1px solid rgba(255, 255, 255, 0.5); 
+    background: #28b362;
+    opacity: 1;
     border-radius: 20px;
-    padding: 20px;
+    padding: 10px;
+    padding-right: 50px;
     transition: left 0.3s ease;
+}
+
+h1 {
     text-decoration: none;
     font-weight: 500;
     color: #fff;
-    opacity: 0.7;
+    margin-top: 0;
+    margin: 1em;
+    margin-bottom: 60px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+h2 {
+    text-decoration: none;
+    font-weight: 500;
+    color: #fff;
     margin-top: 0;
     margin: 1em;
     margin-bottom: 60px;
@@ -34,7 +46,8 @@ a {
 
 a:hover {
     text-shadow: none;
-    color: #28b362;
+    color: #186f3c;
+    opacity: 0.5;
     overflow-y: auto; /* Enable vertical scrolling */
 }
 
@@ -47,6 +60,12 @@ a:hover {
     color: #fff;
     position: absolute; 
     top: 50%; 
-    right: 20px; 
+    left: 10px; 
+    position: fixed;
+    transition: right 0.3s ease;
+}
 
+.side-pane:hover .arrow-icon {
+    opacity: 0; 
+    transition: left 0.3s ease;
 }
