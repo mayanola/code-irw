@@ -34,13 +34,10 @@ const temp_json_tasks = {
 
 const SubstepPage = () => {
     const { stepIndex, substepIndex } = useParams();
-    const step = temp_json_tasks.Steps[stepIndex];
-    const substep = step.Substeps[substepIndex];
 
     return (
         <div style={{ marginLeft: '270px', padding: '20px' }}>
-            <h2>{Object.keys(step)[0]}: {substep}</h2>
-            <p>Details about {substep} will go here.</p>
+            {/* No content is shown here */}
         </div>
     );
 }

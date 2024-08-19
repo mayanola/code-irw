@@ -35,6 +35,7 @@ a {
 a:hover {
     text-shadow: none;
     color: #28b362;
+    overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .side-pane:hover {
