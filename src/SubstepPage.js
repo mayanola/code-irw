@@ -36,8 +36,7 @@ const SubstepPage = () => {
     const { stepIndex, substepIndex } = useParams();
 
     return (
-        <div style={{ marginLeft: '270px', padding: '20px' }}>
-            {/* No content is shown here */}
+        <div style={{ marginLeft: '270px', padding: '20px', overflow: `auto`, height: `100%`}}>
         </div>
     );
 }

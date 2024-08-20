@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import './ProjectPage.css'; 
-
+import Chatbot from './Chatbot.js';
 
 // A temporary JSON object to represent an example set of tasks
 // In the future, this will be passed in to the component or 
@@ -134,21 +134,28 @@ const temp_json_tasks1 = {
 const ProjectPage = () => {
     const userID = localStorage.getItem('userID');
     const projectID = localStorage.getItem('projectID');
-    const plan = localStorage.getItem('plan');
+    const plan = JSON.parse(localStorage.getItem('plan'));
+    const [showChatbot, setShowChatbot] = useState(false);
 
-    console.log(userID, projectID);
-    console.log(plan);
+
+    const toggleChatbot = () => {
+        setShowChatbot(!showChatbot);
+    };
 
     // State to keep track of the checked status of each substep
     const [checked, setChecked] = useState(
-        temp_json_tasks.Steps.map(step =>
+        plan.Steps.map(step =>
             step.Substeps.map(() => false)
         )
+    );
+    const Spinner = () => (
+        <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
     );
 
     // State to hold the instructions fetched from the Cloud Function
     const [instructions, setInstructions] = useState(null);
     const [currentTitle, setCurrentTitle] = useState(""); // State to hold the current title
+    const [loading, setLoading] = useState(false); // State to handle loading
 
     const handleCheckboxChange = (stepIndex, substepIndex) => {
         const newChecked = checked.map((step, i) =>
@@ -160,36 +167,49 @@ const ProjectPage = () => {
     // Function to fetch instructions for a substep
     const fetchInstructions = async (stepIndex, substepIndex) => {
         // Set the current title
-        const step = temp_json_tasks.Steps[stepIndex];
+        const step = plan.Steps[stepIndex];
         const substep = step.Substeps[substepIndex];
         setCurrentTitle(`Step ${stepIndex + 1}: ${substep}`);
 
+        setLoading(true);
         // Clear the current instructions to prevent old instructions from being visible
-        setInstructions("Loading instructions...");
     
         try {
             const response = await generateInstructions({
-                plan: temp_json_tasks,
+                plan: plan,
                 step: `Step ${stepIndex + 1}`,
                 substep: substep
             });
+            console.log(response.data);
     
-            setInstructions(response.data.instructions);
+            setInstructions(response.data.instructions.split('\n'));
         } catch (error) {
             console.error("Failed to fetch instructions:", error);
             setInstructions("Failed to fetch instructions.");
+        } finally {
+            setLoading(false);
         }
     };
+
+    // calculate progress
+    const totalCheckboxes = checked.reduce((acc, step) => acc + step.length, 0);
+    const checkedCheckboxes = checked.reduce((acc, step) => acc + step.filter(substep => substep).length, 0);
+    const progress = (checkedCheckboxes / totalCheckboxes) * 100;
     
     return (
         <div className="container">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
             <div className="side-pane">
-                <h1>{temp_json_tasks["Project Summary"]}</h1>
+                <h1>{plan["Project Summary"]}</h1>
                 <i class="fas fa-arrow-right arrow-icon"></i>
+
+                <div className="progress-bar-container">
+                    <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+                </div>
+
                 {/* Display each of the steps */}
                 <div>
-                    {temp_json_tasks.Steps.map((step, stepIndex) => (
+                    {plan.Steps.map((step, stepIndex) => (
                         <div key={stepIndex}>
                             <h2>{Object.keys(step)[0]}: {Object.values(step)[0]}</h2>
                             <ul>
@@ -214,17 +234,48 @@ const ProjectPage = () => {
                         </div>
                     ))}
                 </div>
-                <footer>
-                    <p>Name: {temp_json_tasks.Name}</p>
-                </footer>
+                {/* <footer>
+                    <p>Name: {plan.Name}</p>
+                </footer> */}
             </div>
             <div className="content-pane">
                 <div style={{ marginLeft: '50px', padding: '20px' }}>
                     {currentTitle && <h2>{currentTitle}</h2>}
-                    {instructions ? <p>{instructions}</p> : <p>Select a substep to see instructions.</p>}
+                    {loading ? (
+                        <Spinner />
+                    ) : (
+                        Array.isArray(instructions) && instructions.length > 0 ? (
+                            instructions.map((line, index) => {
+                                const trimmedLine = line.trim();
+                                
+                                // Check if the line starts with "1." or "2."
+                                if (/^\d+\.\s/.test(trimmedLine)) {
+                                    return (
+                                        <div key={index}>
+                                            <h4>{trimmedLine}</h4>
+                                        </div>
+                                    );
+                                } else {
+                                    return (
+                                        <div key={index}>
+                                            <p>{trimmedLine}</p>
+                                        </div>
+                                    );
+                                }
+                            })
+                        ) : (
+                            <h2 style={{textAlign:`center`, marginTop:`25%`}}>Start working on your plan to the left!</h2>
+                        )
+                    )}
                 </div>
                 <Outlet />
-            </div> 
+
+                    <button className="chatbot-toggle" onClick={toggleChatbot}>
+                        Chat with Us
+                    </button>
+                    {showChatbot && <Chatbot onClose={toggleChatbot} />}
+            </div>
+
         </div>
     );
 };
