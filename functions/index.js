@@ -239,8 +239,8 @@ exports.generatePlan = functions.https.onRequest(async (req, res) => {
         model: "gpt-4",
       });
   
-      const apiResponse = generatePlanCompletions.choices[0].message.content;
-      functions.logger.log(apiResponse);
+      const ProjectPlan = generatePlanCompletions.choices[0].message.content;
+      functions.logger.log(ProjectPlan);
 
       try {
         // generate new user doc under users collection with random id
@@ -261,12 +261,12 @@ exports.generatePlan = functions.https.onRequest(async (req, res) => {
         .doc(projectID)
         .set({
             ...data,
-            apiResponse,
+            ProjectPlan,
             timestamp: Date.now()
         });
 
           functions.logger.log(`Info written - User ID: ${userID} Project ID: ${projectID}`);
-          res.status(200).json({ result: {userID, projectID, apiResponse}});
+          res.status(200).json({ result: {userID, projectID, ProjectPlan}});
       } catch (error) {
         functions.logger.log("Error writing document: ", error);
       }
