@@ -120,32 +120,46 @@ exports.followUp = functions.https.onRequest(async (req, res) => {
 
       followuSystemMessage = {
           role: "system",
+          // content: `You are tasked with generating a plan specific to the user's individual needs to help them 
+          // learn how to build a project with a limited programming background. What further information do you need
+          // from the user to accurately generate this plan? Return a json of the fewest number of questions you need to ask
+          // to achieve this in the following format:
+          // {
+          //   "questions": [
+          //     {
+          //       "question": "What is the specific project you want to build?"
+          //     },
+          //     {
+          //       "question": "What is your current level of programming knowledge?"
+          //     },
+          //     {
+          //       "question": "What programming languages are you comfortable with?"
+          //     },
+          //     {
+          //       "question": "Have you ever worked on a similar project before?" 
+          //     },
+          //     {
+          //       "question": "What tools and software are you familiar with and comfortable using?"
+          //     },
+          //     {
+          //       "question": "What resources are you currently using to learn programming?"
+          //     }
+          //   ]
+          // }`
           content: `You are tasked with generating a plan specific to the user's individual needs to help them 
-          learn how to build a project with a limited programming background. What further information do you need
-          from the user to accurately generate this plan? Return a json of the fewest number of questions you need to ask
-          to achieve this in the following format:
-          {
-            "questions": [
-              {
-                "question": "What is the specific project you want to build?"
-              },
-              {
-                "question": "What is your current level of programming knowledge?"
-              },
-              {
-                "question": "What programming languages are you comfortable with?"
-              },
-              {
-                "question": "Have you ever worked on a similar project before?" 
-              },
-              {
-                "question": "What tools and software are you familiar with and comfortable using?"
-              },
-              {
-                "question": "What resources are you currently using to learn programming?"
-              }
-            ]
-          }`
+          // learn how to build a project with a limited programming background. What further information do you need
+          // from the user to accurately generate this plan? Return a json of the fewest number of questions you need to ask
+          // to achieve this in the following format:
+          // {
+          //   "questions": [
+          //     {
+          //       "question": "question1"
+          //     },
+          //     {
+          //       "question": "question2"
+          //     }
+          //   ]
+          // }`
         };
 
         const followupUserMesssage = {

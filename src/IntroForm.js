@@ -64,11 +64,12 @@ function IntroForm() {
     const newFormData = { ...formData, ...data };
     setFormData(newFormData);
       
-    if (currentStep === 8) {
+    if (currentStep === 7) {
       setIsSubmitting(true);
         try {
-            while (currentStep === 8) {
+            while (currentStep === 7) {
               try {
+                console.log()
                 const skillsData = await generateSkills({newFormData});
                 const skillsJSON = JSON.parse(skillsData.data);
                 console.log(skillsJSON.skills[0].skill)
@@ -86,10 +87,10 @@ function IntroForm() {
         setCurrentStep(currentStep + 1);
         setIsSubmitting(false);
        }
-    } else if (currentStep === 9) {
+    } else if (currentStep === 8) {
         setIsSubmitting(true);
         try {
-            while (currentStep === 9) {
+            while (currentStep === 8) {
               // accesses the keys of the jsons in the skills array (ie. skill names) that are checked and adds them to the form data
               const selectedSkillNames = Object.keys(selectedSkills).filter(skill => selectedSkills[skill]);
               newFormData.selectedSkills = selectedSkillNames;
@@ -116,11 +117,11 @@ function IntroForm() {
         setIsSubmitting(false);
        }
       // submit form
-    }  else if (currentStep === 10) {
+    }  else if (currentStep === 9) {
       // here we send the answers to the API and generate follow up questions
         setIsSubmitting(true);
         try {
-            while (currentStep === 10) {
+            while (currentStep === 9) {
               //want to generate plan summary here
               console.log(newFormData);
               try {
@@ -144,7 +145,7 @@ function IntroForm() {
           setIsSubmitting(false);
         }
         // submit form
-    } else if (currentStep === 10+(followupLength)){
+    } else if (currentStep === 9+(followupLength)){
       //follow up questions
         setIsSubmitting(true);
         try {
@@ -168,7 +169,7 @@ function IntroForm() {
         }
     } 
       else {
-        if (currentStep > 10 && currentStep < 11+followupLength) {
+        if (currentStep > 9 && currentStep < 10+followupLength) {
           setNextQ(followUpQs[currentStep-10].question);
         }
       setCurrentStep(currentStep + 1);
@@ -238,7 +239,7 @@ function IntroForm() {
                   <button type="submit">Next</button>
                 </motion.div>
             )}
-            {currentStep === 3 && (
+            {/* {currentStep === 3 && (
               <motion.div
               key="step3"
               variants={stepVariants}
@@ -253,8 +254,8 @@ function IntroForm() {
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
               </motion.div>
-            )}
-            {currentStep === 4 && (
+            )} */}
+            {currentStep === 3 && (
               <motion.div
               key="step4"
               variants={stepVariants}
@@ -264,13 +265,13 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>How many weeks do you want to build your project in?</p>
-                <input {...register('answer4', { required: true })} />
+                <input {...register('answer3', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
               </motion.div>
             )}
-            {currentStep === 5 && (
+            {currentStep === 4 && (
               <motion.div
               key="step5"
               variants={stepVariants}
@@ -280,13 +281,13 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>What are your project goals?</p>
-                <input {...register('answer5', { required: true })} />
+                <input {...register('answer4', { required: true })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
               </motion.div>
             )}
-            {currentStep === 6 && (
+            {currentStep === 5 && (
               <motion.div
               key="step6"
               variants={stepVariants}
@@ -296,13 +297,13 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>If scoped out, what is your experimental design?</p>
-                <input {...register('answer6', { required: false })} />
+                <input {...register('answer5', { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
               </motion.div>
             )}
-            {currentStep === 7 && (
+            {currentStep === 6 && (
               <motion.div
               key="step7"
               variants={stepVariants}
@@ -312,13 +313,13 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <p>What are the features of your dataset?</p>
-                <input {...register('answer7', { required: false })} />
+                <input {...register('answer6', { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit">Next</button>
               </motion.div>
             )}
-            {currentStep === 8 && (
+            {currentStep === 7 && (
             <motion.div
             key="step8"
             variants={stepVariants}
@@ -328,7 +329,7 @@ function IntroForm() {
             className={styles.step}
             style={{ position: 'absolute'}}>
                 <p>Do you have any additional information that you would like to submit?</p>
-                <input {...register('answer8', { required: false })} />
+                <input {...register('answer7', { required: false })} />
                 <br></br>
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit" disabled={isSubmitting}>
@@ -337,9 +338,9 @@ function IntroForm() {
               </motion.div>
             )}
           
-          {currentStep === 9 && (
+          {currentStep === 8 && (
               <motion.div
-              key="step9"
+              key="step8"
               variants={stepVariants}
               initial="initial"
               animate="enter"
@@ -373,7 +374,7 @@ function IntroForm() {
                 {isSubmitting ? 'Submitting...' : 'Next'}
                 </button>
               </motion.div>
-            )}{currentStep === 10 && (
+            )}{currentStep === 9 && (
               <motion.div
                 key="step10"
                 variants={stepVariants}
@@ -383,14 +384,14 @@ function IntroForm() {
                 className={styles.step}
                 style={{ position: 'absolute'}}>
                 <p style={{ fontSize: '20px', paddingTop: '200px', marginBottom: '30px'}}>Is this an accurate summary? Clarify what is wrong if not. <br/><br/>{summary}</p>
-                <input {...register('answer10', { required: false })} />
+                <input {...register('answer9', { required: false })} />
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Submitting...' : 'Next'}
                 </button>
               </motion.div>
             )}
-            {currentStep >= 11 && currentStep < 11+followupLength && (
+            {currentStep >= 10 && currentStep < 10+followupLength && (
             <motion.div
             key={`step${currentStep}`}
             variants={stepVariants}
