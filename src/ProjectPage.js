@@ -6,6 +6,11 @@ import { Link, Outlet } from 'react-router-dom';
 
 //const generateInstructions = httpsCallable(functions, 'generateInstructions');
 const generateInstructions = httpsCallable(functions, 'generateInstructions2');
+
+// Video functions
+const getYoutubeKeywords = httpsCallable(functions, 'getYoutubeKeywords');
+const getYouTubeVideo = httpsCallable(functions, 'getYouTubeVideo');
+
 const temp_json_tasks = {
     "Project Summary": "Design Portfolio Website",
     "Steps": [
@@ -124,6 +129,77 @@ const temp_json_tasks1 = {
     "Name": "Carolyn"
 };
 
+const getVideo = () => {
+    //This version does not work for some reason, you need an embeddable link
+    // const videoUrl = "https://youtu.be/fa8k8IQ1_X0?si=zSOct9b56eNUGikJ";
+
+    // const videoUrl = "https://www.youtube.com/embed/fa8k8IQ1_X0";
+    const videoUrl = "https://www.youtube.com/embed/CPmQwlycfGI";
+    return (
+        <div className="video-container">
+            <h3>Related Video</h3>
+            <iframe
+                width="560"
+                height="315"
+                src={videoUrl}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+            ></iframe>
+        </div>
+    );
+};
+
+const fetchVideoForStep = async (plan, stepIndex, substepIndex, setLoading, setVideoComponent) => {
+    // Get the step and substep just like in fetchInstructions
+    const step = plan.Steps[stepIndex];
+    const substep = step.Substeps[substepIndex];
+    
+    setLoading(true); // Set loading state to true while fetching
+
+    try {
+        // Step 1: Get the keywords using getYoutubeKeywords
+        const keywordResponse = await getYoutubeKeywords({
+            plan: plan, // Pass the whole plan
+            step: `Step ${stepIndex + 1}`,
+            substep: substep
+        });
+
+        const keywords = keywordResponse.data.keywords;
+
+        // Step 2: Use the keywords to get the YouTube video
+        const videoResponse = await getYouTubeVideo({ keywords });
+        const videoUrl = videoResponse.data.videoUrl;
+
+        // Step 3: Update the video component with the fetched video URL
+        setVideoComponent(
+            <div className="video-container">
+                <h3>Related Video</h3>
+                <iframe
+                    width="560"
+                    height="315"
+                    src={videoUrl}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                ></iframe>
+            </div>
+        );
+    } catch (error) {
+        console.error("Failed to fetch video:", error);
+        setVideoComponent(
+            <div className="video-container">
+                <h3>Failed to load video</h3>
+            </div>
+        );
+    } finally {
+        setLoading(false); // Set loading state to false once fetching is complete
+    }
+};
+
+
 
 const ProjectPage = () => {
     const userID = localStorage.getItem('userID');
@@ -142,6 +218,7 @@ const ProjectPage = () => {
     const userId = 'ishita'; // Document ID for Ishita
     const projectId = 'PersonalDesignPortfolio'; // Document ID for the Personal Design Portfolio
 
+    //write a backend function that takes in a userID and a projectID and returns the project plan 
     // // State to hold the fetched JSON data
     // const [temp_json_tasks, setTempJsonTasks] = useState(null);
 
@@ -190,26 +267,23 @@ const ProjectPage = () => {
         setChecked(newChecked);
     };
 
-    // Function to fetch instructions for a substep
     const fetchInstructions = async (stepIndex, substepIndex) => {
         // Set the current title
         const step = plan.Steps[stepIndex];
         const substep = step.Substeps[substepIndex];
         setCurrentTitle(`Step ${stepIndex + 1}: ${substep}`);
 
-        localStorage.setItem('instructions', null);
         setLoading(true);
 
         // Clear the current instructions to prevent old instructions from being visible
-        setInstructions(null);
-
+    
         try {
             const response = await generateInstructions({
                 plan: plan,
                 step: `Step ${stepIndex + 1}`,
                 substep: substep
             });
-            // console.log(response.data.instructions);
+            console.log(response.data);
     
             setInstructions(response.data.instructions.split('\n'));
             localStorage.setItem('instructions', response.data.instructions);
@@ -221,11 +295,11 @@ const ProjectPage = () => {
         }
     };
 
-    // calculate progress
+    
     const totalCheckboxes = checked.reduce((acc, step) => acc + step.length, 0);
     const checkedCheckboxes = checked.reduce((acc, step) => acc + step.filter(substep => substep).length, 0);
     const progress = (checkedCheckboxes / totalCheckboxes) * 100;
-    
+
     return (
         <div className="container">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
@@ -299,6 +373,8 @@ const ProjectPage = () => {
                     )}
                 </div>
                 <Outlet />
+                {/* Call the getVideo function to display the YouTube video at the bottom */}
+            {getVideo()}
 
                     <button className="chatbot-toggle" onClick={toggleChatbot}>
                         Stuck?
