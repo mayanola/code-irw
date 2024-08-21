@@ -1,20 +1,8 @@
-
-import { Link, Outlet } from 'react-router-dom';
 import './ProjectPage.css'; 
 import Chatbot from './Chatbot.js';import React, { useEffect, useState } from 'react';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { initializeApp } from 'firebase/app';
-
-
-
-// A temporary JSON object to represent an example set of tasks
-// In the future, this will be passed in to the component or 
-// loaded from the database.
-
-import './ProjectPage.css'; // Import the CSS file
 import { functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
-
+import { Link, Outlet } from 'react-router-dom';
 
 //const generateInstructions = httpsCallable(functions, 'generateInstructions');
 const generateInstructions = httpsCallable(functions, 'generateInstructions2');
@@ -218,6 +206,9 @@ const ProjectPage = () => {
     const projectID = localStorage.getItem('projectID');
     const plan = JSON.parse(localStorage.getItem('plan'));
     const [showChatbot, setShowChatbot] = useState(false);
+    const [instructions, setInstructions] = useState(null);
+    const [currentTitle, setCurrentTitle] = useState(""); // State to hold the current title
+    const [loading, setLoading] = useState(false); // State to handle loading
 
     // const app = initializeApp(firebaseConfig);
     // const db = getFirestore(app);
@@ -269,11 +260,6 @@ const ProjectPage = () => {
         <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
     );
 
-    // State to hold the instructions fetched from the Cloud Function
-    const [instructions, setInstructions] = useState(null);
-    const [currentTitle, setCurrentTitle] = useState(""); // State to hold the current title
-    const [loading, setLoading] = useState(false); // State to handle loading
-
     const handleCheckboxChange = (stepIndex, substepIndex) => {
         const newChecked = checked.map((step, i) =>
             step.map((substep, j) => (i === stepIndex && j === substepIndex ? !substep : substep))
@@ -286,10 +272,11 @@ const ProjectPage = () => {
         const step = plan.Steps[stepIndex];
         const substep = step.Substeps[substepIndex];
         setCurrentTitle(`Step ${stepIndex + 1}: ${substep}`);
-    
+
         setLoading(true);
+
         // Clear the current instructions to prevent old instructions from being visible
-        
+    
         try {
             const response = await generateInstructions({
                 plan: plan,
@@ -297,7 +284,9 @@ const ProjectPage = () => {
                 substep: substep
             });
             console.log(response.data);
+    
             setInstructions(response.data.instructions.split('\n'));
+            localStorage.setItem('instructions', response.data.instructions);
         } catch (error) {
             console.error("Failed to fetch instructions:", error);
             setInstructions("Failed to fetch instructions.");
@@ -379,7 +368,7 @@ const ProjectPage = () => {
                                 }
                             })
                         ) : (
-                            <h2 style={{textAlign:`center`, marginTop:`25%`}}>Start working on your plan to the left!</h2>
+                            <h2 className="animated-text" style={{textAlign:`center`, marginTop:`25%`}}>Start working on your plan to the left!</h2>
                         )
                     )}
                 </div>
@@ -388,7 +377,7 @@ const ProjectPage = () => {
             {getVideo()}
 
                     <button className="chatbot-toggle" onClick={toggleChatbot}>
-                        Chat with Us
+                        Stuck?
                     </button>
                     {showChatbot && <Chatbot onClose={toggleChatbot} />}
             </div>

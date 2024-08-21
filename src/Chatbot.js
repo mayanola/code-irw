@@ -1,54 +1,78 @@
-import React, { useState } from 'react';
-import './Chatbot.css'; // Create this CSS file for styling the chatbot
+import React, { useState, useEffect, useRef } from 'react';
+import { functions } from './firebase';
+import { httpsCallable } from 'firebase/functions';
+import './Chatbot.css';
+
+const askApi = httpsCallable(functions, 'askApi');
+
 
 const Chatbot = ({ onClose }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
+    const [isExpanded, setIsExpanded] = useState(false);
+    const chatBodyRef = useRef(null);
+    const loadingMessage = { sender: "bot", text: "", isLoading: true };
 
     const sendMessage = async () => {
         if (input.trim() === "") return;
 
         // Add user message to chat
         const newMessages = [...messages, { sender: "user", text: input }];
-        setMessages(newMessages);
+        setMessages([...newMessages, loadingMessage]);
         setInput("");
 
         try {
-            // Replace this URL with your actual API endpoint
-            // const response = await fetch("https://api.yourchatbot.com/chat", {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json"
-            //     },
-            //     body: JSON.stringify({ message: input })
-            // });
-            // const data = await response.json();
+            const instructions = localStorage.getItem('instructions');
+            // console.log(instructions);
+            
+            const response = await askApi(instructions);
+            console.log(response.data);
 
-            // Add bot response to chat
-            setMessages([...newMessages, { sender: "bot", text: "response here"}]);
+            // await new Promise(resolve => setTimeout(resolve, 2000));
+
+            setMessages(prevMessages =>
+                prevMessages.map(msg =>
+                    msg.isLoading ? { sender: "bot", text: response.data } : msg
+                )
+            );
+            // setMessages([...newMessages, { sender: "bot", text: "response here"}]);
             // response.data
         } catch (error) {
             console.error("Failed to send message:", error);
         }
     };
 
+    useEffect(() => {
+        if (chatBodyRef.current) {
+            chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+        }
+    }, [messages]);
+
 
     const handleInputChange = (e) => setInput(e.target.value);
+
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
             sendMessage();
         }
     };
 
+    const toggleExpand = () => {
+        setIsExpanded(prev => !prev);
+    };
+
     return (
-        <div className="chatbot-container">
+        <div className={`chatbot-container ${isExpanded ? 'expanded' : ''}`}>
             <div className="chatbot-header">
-                <h4>Chat with Us</h4>
+                <button className="expand-toggle" onClick={toggleExpand}>
+                    {isExpanded ? '−' : '+'}
+                </button>
+                <h4>Ask anything...</h4>
                 <button onClick={onClose}>X</button>
             </div>
-            <div className="chatbot-body">
+            <div className="chatbot-body" ref={chatBodyRef}>
                 {messages.map((message, index) => (
-                    <div key={index} className={`chatbot-message ${message.sender}`}>
+                    <div key={index} className={`chatbot-message ${message.sender} ${message.isLoading ? 'loading' : ''}`}>
                         {message.text}
                     </div>
                 ))}

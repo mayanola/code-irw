@@ -43,11 +43,16 @@
     right: 20px;
     width: 300px;
     background-color: white;
-    border: 1px solid #186f3c;
+    border: 1px solid #1e8cc7;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     animation: slideInUp 0.5s ease-in-out;
+}
+
+.chatbot-container.expanded {
+    width: 500px; /* Width when expanded */
+    max-height: 600px; /* Height when expanded */
 }
 
 .chatbot-header {
@@ -58,6 +63,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.expand-toggle {
+    margin-left: 10px;
+    padding: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 .h4 {
@@ -81,7 +96,9 @@
 }
 
 .chatbot-body {
-    max-height: 300px;
+    /* max-height: 300px; */
+    max-height: calc(100% - 80px); /* Adjust height based on header/footer size */
+
     overflow-y: auto;
     padding: 10px;
 }
@@ -94,8 +111,13 @@
 .chatbot-footer input {
     flex: 1;
     padding: 10px;
-    border: 1px solid #186f3c;
+    border: 1px solid #28b362;
+    color: #186f3c;
     border-radius: 5px;
+}
+
+.chatbot-footer input::placeholder {
+    color: #28b362;
 }
 
 .chatbot-footer button {
@@ -114,11 +136,13 @@
     border-radius: 5px;
     font-size: 14px;
     animation: fadeIn 0.3s ease-in-out;
+    white-space: pre-wrap; /* Maintains line breaks and whitespace */
+    word-wrap: break-word; /* Ensures long words or URLs break properly */
 }
 
 .chatbot-message.user {
     background-color: #28b362;
-    color: white;
+    color: rgba(255, 255, 255, 0.845);
     align-self: flex-end;
     width: 40%;
     margin-left: auto;
@@ -127,8 +151,40 @@
 
 .chatbot-message.bot {
     background-color: #186f3c;
-    color: white;
+    color: rgba(255, 255, 255, 0.845);
     align-self: flex-start;
-    width: 40%;
+    width: 80%;
     animation: popIn 0.3s ease-out;
+}
+
+/* Loading dots animation */
+.chatbot-message.bot.loading:after {
+    content: " ";
+    display: inline-block;
+    width: 0.4em;
+    height: 0.4em;
+    margin-left: 0%;
+    margin-top: 5px;
+    border-radius: 50%;
+    background-color: #ffffffb9;
+    box-shadow: 0.3em 0 0 0 #fff, 0.7em 0 0 0 #fff; 
+    animation: loading-dots 1s infinite steps(3, end);
+}
+
+@keyframes loading-dots {
+    0% {
+        box-shadow: 1.5em 0 0 0 #fff, 3em 0 0 0 #fff;
+    }
+    25% {
+        box-shadow: 1.5em 0 0 0 #fff, 3em 0 0 0 transparent;
+    }
+    50% {
+        box-shadow: 1.5em 0 0 0 transparent, 3em 0 0 0 transparent;
+    }
+    75% {
+        box-shadow: 1.5em 0 0 0 transparent, 3em 0 0 0 #fff;
+    }
+    100% {
+        box-shadow: 1.5em 0 0 0 #fff, 3em 0 0 0 #fff;
+    }
 }

@@ -369,6 +369,47 @@ exports.generateInstructions2 = functions.https.onRequest(async (req, res) => {
   });
 });
 
+
+exports.askApi = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    try {
+      const instructions = req.body.data;
+      functions.logger.log(instructions);
+
+      askApiSystemMessage = {
+        role: "system",
+        content: `You are a friendly and chatbot tasked with helping the user build a bespoke programming project. Respond to the user's 
+        message in a clear, happy, and simple way to most accurately and efficiently walk them through their programming problem. Your
+        response should be suitable for the user who has limited programming experience so do not overcomplicate answers. Respond in as
+        few words as possible.`
+      };
+
+      const askApiUserMessage = {
+          role: 'user',
+          content: `If the following data is not null, this is the step of the project the user is working on, use this to inform your
+          response. If it is null, ignore this context and just answer their question: ${instructions}`
+        };
+    
+      const askApiCompletions = await openai.chat.completions.create({
+        messages: [
+          askApiSystemMessage,
+          askApiUserMessage
+        ],
+        model: "gpt-4",
+      });
+  
+      const apiResponse = askApiCompletions.choices[0].message.content;
+      functions.logger.log(apiResponse);
+
+      res.status(200).json({ result: apiResponse});
+    } catch (error) {
+      console.error("Error calling OpenAI API:", error);
+      res.status(500).json({ error: "Failed to call OpenAI API" });
+    }
+  });
+});
+
+
 exports.getYoutubeKeywords = functions.https.onRequest(async (req, res) => {
   cors(req, res, async () => {
       console.log("Get Youtube Keywords started");

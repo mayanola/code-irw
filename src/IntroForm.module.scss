@@ -12,7 +12,7 @@ body {
   transform: translate(-50%,-50%);
   top: 50%;
   left: 50%;
-  width: 35%
+  width: 35%;
 }
 
 
@@ -208,4 +208,13 @@ button:focus {
   font-size: 1.2rem;
   text-align: left;
   padding-left: 15px; /* Add left padding for spacing */
+}
+
+.selectSkillsText {
+  font-size: 20px;
+  display: flex;
+  flex-direction: column;
+  padding-top: 80%;
+  margin-top: 80%;
+  margin-bottom: 30px;
 }

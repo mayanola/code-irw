@@ -57,19 +57,30 @@ function IntroForm() {
   const [selectedSkills, setSelectedSkills] = useState({});
   const [summary, setSummary] = useState();
   const navigate = useNavigate();
+  const qString = "";
 
 
   const handleNext = async (data) => {
+    const questionKey = `question${currentStep}`;
+    if (currentStep < 7) {  
+      const qString = "hello";
+    } else {
+      const qString = nextQ;
+    }
+    // console.log(questionKey);
+    // console.log(nextQ);
 
-    const newFormData = { ...formData, ...data };
+
+
+    const newFormData = { ...formData, ...data, [questionKey]: qString };
     setFormData(newFormData);
-      
+
     if (currentStep === 7) {
       setIsSubmitting(true);
         try {
             while (currentStep === 7) {
               try {
-                console.log()
+                console.log(newFormData);
                 const skillsData = await generateSkills({newFormData});
                 const skillsJSON = JSON.parse(skillsData.data);
                 console.log(skillsJSON.skills[0].skill)
@@ -348,7 +359,7 @@ function IntroForm() {
               className={styles.step}
               style={{ position: 'absolute'}}>
                 <FormGroup className={styles.formGroup}>
-                  <p style={{ fontSize: '20px', paddingTop: '300px', marginBottom: '30px'}} className={styles.formGroup}>Select the skills you already have</p>
+                  <p className={styles.selectSkillsText}>Select the skills you already have</p>
                   {skills?.skills?.length > 0 ? (
                     skills.skills.map((skill, index) => (
                       <FormControlLabel
@@ -383,7 +394,7 @@ function IntroForm() {
                 exit="exit"
                 className={styles.step}
                 style={{ position: 'absolute'}}>
-                <p style={{ fontSize: '20px', paddingTop: '200px', marginBottom: '30px'}}>Is this an accurate summary? Clarify what is wrong if not. <br/><br/>{summary}</p>
+                <p style={{ fontSize: '20px', display: 'flex', flexDirection: 'column', paddingTop: '80%', marginBottom: '30px'}}>Is this an accurate summary? Clarify what is wrong if not. <br/><br/>{summary}</p>
                 <input {...register('answer9', { required: false })} />
                 <button type="button" onClick={handleBack}>Back</button>
                 <button type="submit" disabled={isSubmitting}>
