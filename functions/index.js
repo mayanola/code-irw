@@ -117,10 +117,11 @@ exports.generateSummary = functions.https.onRequest(async (req, res) => {
 exports.followUp = functions.https.onRequest(async (req, res) => {
   cors(req, res, async () => {
       try {
-        const {who, what, how_learn, timeline, skills, goals, design, dataset, additional} = req.body.data.newFormData;
+        // const {who, what, how_learn, timeline, skills, goals, design, dataset, additional} = req.body.data.newFormData;
+        const data = req.body.data.newFormData;
 
-      followuSystemMessage = {
-          role: "system",
+        followuSystemMessage = {
+            role: "system",
           // content: `You are tasked with generating a plan specific to the user's individual needs to help them 
           // learn how to build a project with a limited programming background. What further information do you need
           // from the user to accurately generate this plan? Return a json of the fewest number of questions you need to ask
@@ -165,8 +166,8 @@ exports.followUp = functions.https.onRequest(async (req, res) => {
 
         const followupUserMesssage = {
             role: 'user',
-            content: "This is the information you already have about the user. Only return a json in your response and no other words at all:"+
-            `Who: ${who}, What: ${what}, How to Learn: ${how_learn}, Timeline: ${timeline}, Skills: ${skills}, Goals: ${goals}, Design: ${design}, Dataset: ${dataset}, Additional: ${additional}`
+            content: `This is the information you already have about the user. Only return a json in your response and no other words 
+            at all: ${data}`
           };
           
         const followUpCompletions = await openai.chat.completions.create({
