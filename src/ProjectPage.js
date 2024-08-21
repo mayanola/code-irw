@@ -18,6 +18,11 @@ import { httpsCallable } from 'firebase/functions';
 
 //const generateInstructions = httpsCallable(functions, 'generateInstructions');
 const generateInstructions = httpsCallable(functions, 'generateInstructions2');
+
+// Video functions
+const getYoutubeKeywords = httpsCallable(functions, 'getYoutubeKeywords');
+const getYouTubeVideo = httpsCallable(functions, 'getYouTubeVideo');
+
 const temp_json_tasks = {
     "Project Summary": "Design Portfolio Website",
     "Steps": [
@@ -136,6 +141,77 @@ const temp_json_tasks1 = {
     "Name": "Carolyn"
 };
 
+const getVideo = () => {
+    //This version does not work for some reason, you need an embeddable link
+    // const videoUrl = "https://youtu.be/fa8k8IQ1_X0?si=zSOct9b56eNUGikJ";
+
+    // const videoUrl = "https://www.youtube.com/embed/fa8k8IQ1_X0";
+    const videoUrl = "https://www.youtube.com/embed/CPmQwlycfGI";
+    return (
+        <div className="video-container">
+            <h3>Related Video</h3>
+            <iframe
+                width="560"
+                height="315"
+                src={videoUrl}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+            ></iframe>
+        </div>
+    );
+};
+
+const fetchVideoForStep = async (plan, stepIndex, substepIndex, setLoading, setVideoComponent) => {
+    // Get the step and substep just like in fetchInstructions
+    const step = plan.Steps[stepIndex];
+    const substep = step.Substeps[substepIndex];
+    
+    setLoading(true); // Set loading state to true while fetching
+
+    try {
+        // Step 1: Get the keywords using getYoutubeKeywords
+        const keywordResponse = await getYoutubeKeywords({
+            plan: plan, // Pass the whole plan
+            step: `Step ${stepIndex + 1}`,
+            substep: substep
+        });
+
+        const keywords = keywordResponse.data.keywords;
+
+        // Step 2: Use the keywords to get the YouTube video
+        const videoResponse = await getYouTubeVideo({ keywords });
+        const videoUrl = videoResponse.data.videoUrl;
+
+        // Step 3: Update the video component with the fetched video URL
+        setVideoComponent(
+            <div className="video-container">
+                <h3>Related Video</h3>
+                <iframe
+                    width="560"
+                    height="315"
+                    src={videoUrl}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                ></iframe>
+            </div>
+        );
+    } catch (error) {
+        console.error("Failed to fetch video:", error);
+        setVideoComponent(
+            <div className="video-container">
+                <h3>Failed to load video</h3>
+            </div>
+        );
+    } finally {
+        setLoading(false); // Set loading state to false once fetching is complete
+    }
+};
+
+
 
 const ProjectPage = () => {
     const userID = localStorage.getItem('userID');
@@ -205,30 +281,6 @@ const ProjectPage = () => {
         setChecked(newChecked);
     };
 
-    // Function to fetch instructions for a substep
-    // const fetchInstructions = async (stepIndex, substepIndex) => {
-    //     // Set the current title
-    //     const step = temp_json_tasks.Steps[stepIndex];
-    //     const substep = step.Substeps[substepIndex];
-    //     setCurrentTitle(`Step ${stepIndex + 1}: ${substep}`);
-
-    //     // Clear the current instructions to prevent old instructions from being visible
-    //     setInstructions("Loading instructions...");
-    
-    //     try {
-    //         const response = await generateInstructions({
-    //             plan: temp_json_tasks,
-    //             step: `Step ${stepIndex + 1}`,
-    //             substep: substep
-    //         });
-    
-    //         setInstructions(response.data.instructions);
-    //     } catch (error) {
-    //         console.error("Failed to fetch instructions:", error);
-    //         setInstructions("Failed to fetch instructions.");
-    //     }
-    // };
-    
     const fetchInstructions = async (stepIndex, substepIndex) => {
         // Set the current title
         const step = plan.Steps[stepIndex];
@@ -246,25 +298,15 @@ const ProjectPage = () => {
             });
             console.log(response.data);
             setInstructions(response.data.instructions.split('\n'));
-    
-            // Call the YouTube video generation function
-            const videoResponse = await httpsCallable(functions, 'getYouTubeVideo')({
-                plan: temp_json_tasks,
-                step: `Step ${stepIndex + 1}`,
-                substep: substep
-            });
-            setVideoUrl(videoResponse.data.videoUrl);
         } catch (error) {
             console.error("Failed to fetch instructions:", error);
             setInstructions("Failed to fetch instructions.");
-            setVideoUrl(null);
         } finally {
             setLoading(false);
         }
     };
-    const [videoUrl, setVideoUrl] = useState(null); // State to hold the YouTube video URL
 
-    // calculate progress
+    
     const totalCheckboxes = checked.reduce((acc, step) => acc + step.length, 0);
     const checkedCheckboxes = checked.reduce((acc, step) => acc + step.filter(substep => substep).length, 0);
     const progress = (checkedCheckboxes / totalCheckboxes) * 100;
@@ -342,6 +384,8 @@ const ProjectPage = () => {
                     )}
                 </div>
                 <Outlet />
+                {/* Call the getVideo function to display the YouTube video at the bottom */}
+            {getVideo()}
 
                     <button className="chatbot-toggle" onClick={toggleChatbot}>
                         Chat with Us
