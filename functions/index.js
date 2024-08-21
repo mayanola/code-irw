@@ -1,5 +1,7 @@
 const functions = require('firebase-functions/v1');
 const cors = require('cors')({ origin: true });
+const axios = require('axios');
+
 require('dotenv').config();
 
 // Setup the OpenAI API
@@ -345,6 +347,65 @@ exports.generateInstructions2 = functions.https.onRequest(async (req, res) => {
           res.status(200).json(responseData);
       } catch (error) {
           console.error("Error calling OpenAI API:", error);
+          res.status(500).json({ data: { error: error.message } });
+      }
+
+      console.log("Function finished");
+  });
+});
+
+const YOUTUBE_API_KEY = 'AIzaSyCUh9hbvwBFo_KMqlWKwQgM1CKAkWlKB_A';
+
+exports.getYouTubeVideo = functions.https.onRequest(async (req, res) => {
+  console.log("Function started");
+  console.log("Complete Request Body:", req.body);  // Log the full request body
+
+  cors(req, res, async () => {
+      // Access the plan, step, and substep from req.body.data
+      const { plan, step, substep } = req.body.data;
+      console.log("Request body:", { plan, step, substep });
+
+      const planString = typeof plan === 'string' ? plan : JSON.stringify(plan);
+      console.log("Plan string:", planString);
+
+      try {
+          // Generate keywords for the YouTube search
+          const keywordResponse = await openai.chat.completions.create({
+              messages: [
+                  {
+                      role: 'user',
+                      content: `You are a keyword generator. Given the following project plan, step, and substep, generate relevant keywords for a YouTube search. Here is the project plan: ${planString}. Step: ${step}, Substep: ${substep}.`,
+                  },
+              ],
+              model: "gpt-4",
+          });
+
+          const keywords = keywordResponse.choices[0].message.content;
+          console.log("Generated Keywords:", keywords);
+
+          // Call the YouTube API to search for a video
+          console.log("Calling YouTube API...");
+          const youtubeResponse = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+              params: {
+                  part: 'snippet',
+                  q: keywords,
+                  type: 'video',
+                  maxResults: 1,
+                  key: YOUTUBE_API_KEY, // Using the API key securely
+              },
+          });
+
+          const videoId = youtubeResponse.data.items[0].id.videoId;
+          const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+          console.log("YouTube Video URL:", videoUrl);
+
+          // Wrapping the response in a data field
+          const responseData = { data: { videoUrl: videoUrl } };
+          console.log("Response data:", responseData);
+
+          res.status(200).json(responseData);
+      } catch (error) {
+          console.error("Error in function:", error);
           res.status(500).json({ data: { error: error.message } });
       }
 

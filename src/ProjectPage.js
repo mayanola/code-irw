@@ -15,6 +15,7 @@ import './ProjectPage.css'; // Import the CSS file
 import { functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 
+
 //const generateInstructions = httpsCallable(functions, 'generateInstructions');
 const generateInstructions = httpsCallable(functions, 'generateInstructions2');
 const temp_json_tasks = {
@@ -145,6 +146,7 @@ const ProjectPage = () => {
     const userId = 'ishita'; // Document ID for Ishita
     const projectId = 'PersonalDesignPortfolio'; // Document ID for the Personal Design Portfolio
 
+    //write a backend function that takes in a userID and a projectID and returns the project plan 
     // // State to hold the fetched JSON data
     // const [temp_json_tasks, setTempJsonTasks] = useState(null);
 
@@ -192,29 +194,61 @@ const ProjectPage = () => {
     };
 
     // Function to fetch instructions for a substep
+    // const fetchInstructions = async (stepIndex, substepIndex) => {
+    //     // Set the current title
+    //     const step = temp_json_tasks.Steps[stepIndex];
+    //     const substep = step.Substeps[substepIndex];
+    //     setCurrentTitle(`Step ${stepIndex + 1}: ${substep}`);
+
+    //     // Clear the current instructions to prevent old instructions from being visible
+    //     setInstructions("Loading instructions...");
+    
+    //     try {
+    //         const response = await generateInstructions({
+    //             plan: temp_json_tasks,
+    //             step: `Step ${stepIndex + 1}`,
+    //             substep: substep
+    //         });
+    
+    //         setInstructions(response.data.instructions);
+    //     } catch (error) {
+    //         console.error("Failed to fetch instructions:", error);
+    //         setInstructions("Failed to fetch instructions.");
+    //     }
+    // };
+    
     const fetchInstructions = async (stepIndex, substepIndex) => {
         // Set the current title
         const step = temp_json_tasks.Steps[stepIndex];
         const substep = step.Substeps[substepIndex];
         setCurrentTitle(`Step ${stepIndex + 1}: ${substep}`);
-
+    
         // Clear the current instructions to prevent old instructions from being visible
         setInstructions("Loading instructions...");
-    
+        
         try {
             const response = await generateInstructions({
                 plan: temp_json_tasks,
                 step: `Step ${stepIndex + 1}`,
                 substep: substep
             });
-    
             setInstructions(response.data.instructions);
+    
+            // Call the YouTube video generation function
+            const videoResponse = await httpsCallable(functions, 'getYouTubeVideo')({
+                plan: temp_json_tasks,
+                step: `Step ${stepIndex + 1}`,
+                substep: substep
+            });
+            setVideoUrl(videoResponse.data.videoUrl);
         } catch (error) {
             console.error("Failed to fetch instructions:", error);
             setInstructions("Failed to fetch instructions.");
+            setVideoUrl(null);
         }
     };
-    
+    const [videoUrl, setVideoUrl] = useState(null); // State to hold the YouTube video URL
+
     return (
         <div className="container">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></link>
