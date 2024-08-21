@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+
 import { Link, Outlet } from 'react-router-dom';
 import './ProjectPage.css'; 
-import Chatbot from './Chatbot.js';
+import Chatbot from './Chatbot.js';import React, { useEffect, useState } from 'react';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+
+
 
 // A temporary JSON object to represent an example set of tasks
 // In the future, this will be passed in to the component or 
@@ -11,7 +15,8 @@ import './ProjectPage.css'; // Import the CSS file
 import { functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 
-const generateInstructions = httpsCallable(functions, 'generateInstructions');
+//const generateInstructions = httpsCallable(functions, 'generateInstructions');
+const generateInstructions = httpsCallable(functions, 'generateInstructions2');
 const temp_json_tasks = {
     "Project Summary": "Design Portfolio Website",
     "Steps": [
@@ -137,10 +142,44 @@ const ProjectPage = () => {
     const plan = JSON.parse(localStorage.getItem('plan'));
     const [showChatbot, setShowChatbot] = useState(false);
 
+    // const app = initializeApp(firebaseConfig);
+    // const db = getFirestore(app);
+    // const userID = localStorage.getItem('userID');
+    // const projectID = localStorage.getItem('projectID');
+
+    const userId = 'ishita'; // Document ID for Ishita
+    const projectId = 'PersonalDesignPortfolio'; // Document ID for the Personal Design Portfolio
+
+    // // State to hold the fetched JSON data
+    // const [temp_json_tasks, setTempJsonTasks] = useState(null);
+
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             const docRef = doc(db, 'users', userId, 'Projects', projectId);
+    //             const docSnap = await getDoc(docRef);
+
+    //             if (docSnap.exists()) {
+    //                 const data = docSnap.data();
+    //                 const parsedData = JSON.parse(data.jsonString); // Parse the JSON string
+    //                 setTempJsonTasks(parsedData); // Store the parsed data in state
+    //             } else {
+    //                 console.log("No such document!");
+    //             }
+    //         } catch (error) {
+    //             console.error("Error fetching document:", error);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, [userId, projectId]);
+    // const plan = localStorage.getItem('plan');
 
     const toggleChatbot = () => {
         setShowChatbot(!showChatbot);
     };
+    // console.log(userID, projectID);
+    // console.log(plan);
 
     // State to keep track of the checked status of each substep
     const [checked, setChecked] = useState(
