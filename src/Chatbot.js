@@ -23,16 +23,20 @@ const Chatbot = ({ onClose }) => {
 
         try {
             const instructions = localStorage.getItem('instructions');
-            // console.log(instructions);
-            
-            const response = await askApi(instructions);
-            console.log(response.data);
+            const question = newMessages[newMessages.length -1].text;
 
-            // await new Promise(resolve => setTimeout(resolve, 2000));
+            const message = instructions + question;
+            console.log(message);
+            console.log(instructions);
+
+
+            const response = await askApi(message);
+
+            // console.log(response.data);
 
             setMessages(prevMessages =>
                 prevMessages.map(msg =>
-                    msg.isLoading ? { sender: "bot", text: response.data } : msg
+                    msg.isLoading ? { sender: "bot", text: response.data} : msg
                 )
             );
             // setMessages([...newMessages, { sender: "bot", text: "response here"}]);
