@@ -1,6 +1,9 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getFunctions } from "firebase/functions";
+// // Import the functions you need from the SDKs you need
+// import { initializeApp } from "firebase/app";
+// import { getFunctions } from "firebase/functions";
+import firebase from "firebase/compat/app";
+import 'firebase/compat/firestore';
+import "firebase/compat/functions";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,8 +16,15 @@ const firebaseConfig = {
 };
 
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const functions = getFunctions(app);
+// // Initialize Firebase
+// const app = initializeApp(firebaseConfig);
+// const functions = getFunctions(app);
+// const firestore = firebase.firestore(app);
 
-export { functions };
+// export { functions, firestore };
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+export const firestore = firebase.firestore();
+export const functions = firebase.app().functions("us-central1");
