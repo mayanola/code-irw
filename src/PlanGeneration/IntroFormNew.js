@@ -88,6 +88,9 @@ function IntroFormNew() {
             return;
         }
 
+        // Clear the text area
+        document.querySelector("textarea").value = "";
+
         // Save the data from the form
         await storeResponse(response);
 
