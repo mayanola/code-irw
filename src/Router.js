@@ -5,6 +5,7 @@ import ProjectPage from './ProjectPage';
 import SubstepPage from './SubstepPage'; // Import the SubstepPage component
 import DummyLogin from './DummyLogin';
 import Home from './Home';
+import IntroFormNew from './PlanGeneration/IntroFormNew';
 
 function Router() {
     return (
@@ -12,7 +13,8 @@ function Router() {
             <Routes>
                 <Route path="/" element={<DummyLogin />} />
                 <Route path="/home/:userId" element={<Home />} />
-                <Route path="/intro/:userId/:projectId" element={<IntroForm />} />
+                {/* <Route path="/intro/:userId/:projectId" element={<IntroForm />} /> */}
+                <Route path="/intro/:userId/:projectId" element={<IntroFormNew />} />
                 <Route path="/project" element={<ProjectPage />}>
                     <Route path="step/:stepIndex/substep/:substepIndex" element={<SubstepPage />} />
                 </Route>
