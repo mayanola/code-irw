@@ -5,7 +5,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // Setup the OpenAI API
-const API_KEY = "sk-proj-0MAh3JhaG59omGtWDpzJT3BlbkFJKj1tH72rspC2sFyhymHT";
+const API_KEY = process.env.CHATGPT_API_KEY; 
 
 const OpenAI = require('openai');
 const openai = new OpenAI({ apiKey: API_KEY });
